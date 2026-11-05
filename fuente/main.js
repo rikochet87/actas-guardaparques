@@ -62,6 +62,28 @@ function ejemplos(){
   return [a,b];
 }
 
+/* ============ Instalación ============ */
+let installEvt=null;
+const standalone=()=>{try{return matchMedia("(display-mode: standalone)").matches||navigator.standalone===true}catch(e){return false}};
+const isIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+const puedeInstalar=()=>!standalone()&&window.self===window.top;
+function installHidden(){try{return Number(localStorage.getItem("instalarOculto")||0)>Date.now()}catch(e){return false}}
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEvt=e;if(S.view==="inicio"||S.view==="perfil")render(true)});
+window.addEventListener("appinstalled",()=>{installEvt=null;toast("App instalada. Abrila desde la pantalla de inicio del teléfono.");render(true)});
+function installCard(force){
+  if(!puedeInstalar()||(!force&&installHidden())) return "";
+  return `<div class="install"><svg viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="9" fill="currentColor" opacity=".14"/><path d="M20 7v17m0 0-6-6m6 6 6-6M11 30h18" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+   <div class="grow"><b>Instalá la app en el teléfono</b><span>Queda en la pantalla de inicio y funciona sin señal en el campo.</span></div>
+   <div class="row"><button class="btn primary sm" type="button" data-act="instalar">Instalar app</button>${force?"":`<button class="btn ghost sm" type="button" data-act="instalarNo">Ahora no</button>`}</div></div>`;
+}
+async function instalar(){
+  if(installEvt){ try{ installEvt.prompt(); const r=await installEvt.userChoice; installEvt=null; if(r&&r.outcome==="accepted") toast("Instalando…"); render(true);}catch(e){} return; }
+  const pasos=isIOS()?["Tocá el botón <b>Compartir</b> de Safari (el cuadrado con la flecha hacia arriba).","Deslizá y elegí <b>Agregar a inicio</b>.","Tocá <b>Agregar</b>. El ícono aparece en la pantalla de inicio."]
+   :/android/i.test(navigator.userAgent)?["Abrí el menú <b>⋮</b> de Chrome, arriba a la derecha.","Elegí <b>Instalar app</b> o <b>Agregar a pantalla principal</b>.","Confirmá con <b>Instalar</b>."]
+   :["Abrí este enlace en el celular con <b>Chrome</b> (Android) o <b>Safari</b> (iPhone).","En la computadora, Chrome y Edge muestran un ícono de instalar en la barra de direcciones."];
+  modal(`<h3>Instalar la app</h3>${isIOS()&&!/safari/i.test(navigator.userAgent)?`<p class="notice">En iPhone la instalación funciona desde <b>Safari</b>. Copiá el enlace y abrilo ahí.</p>`:""}<ol class="pasos">${pasos.map(p=>`<li>${p}</li>`).join("")}</ol><button class="btn primary" type="button" data-act="modalno">Entendido</button>`);
+}
+
 /* ============ Render principal ============ */
 function render(keep){
   const y=window.scrollY; const v=$("#view");
@@ -78,7 +100,7 @@ function render(keep){
 function go(view){ if(view!=="editor"&&view!=="ver") S.cur=null; S.view=view; render(); }
 
 function vInicio(){
-  const p=S.perfil; let h=`<div class="stack">`;
+  const p=S.perfil; let h=`<div class="stack">${installCard()}`;
   if(!p||!p.nombre||!p.area) h+=`<div class="notice"><b>Completá tus datos antes de labrar actas.</b> Nombre, legajo y área protegida se cargan solos en cada acta nueva. <button class="btn sm" type="button" data-act="perfil" style="margin-top:8px">Cargar mis datos</button></div>`;
   h+=`<div class="newbar">
    <button class="newcard infr" type="button" data-new="infraccion"><strong>Acta de infracción</strong><span>Hay un presunto infractor identificado. Se lo notifica en el acto y puede firmar.</span></button>
@@ -119,7 +141,7 @@ function vPerfil(){
    <div class="grid3">${fld("proxInf","Próxima de infracción",{...o,type:"number",im:"numeric"})}${fld("proxConst","Próxima de constatación",{...o,type:"number",im:"numeric"})}${fld("prefijo","Prefijo (opcional)",{...o,ph:"Ej.: COP"})}</div></div>
   <div class="panel"><h2>Encabezado del acta</h2><p class="lead">Cargá los logos oficiales tal como figuran en el talonario impreso. Quedan guardados en este dispositivo.</p>
    ${fld("organismo","Línea superior del encabezado (opcional)",{...o,ph:"Ministerio del que depende la APN",hint:"Aparece en el acta de constatación sobre «Administración de Parques Nacionales»."})}
-   <div class="grid2">${logoField("logoApn","Logo de la APN")}${logoField("logoArea","Sello del área protegida")}</div></div></div>`;
+   <div class="grid2">${logoField("logoApn","Logo de la APN")}${logoField("logoArea","Sello del área protegida")}</div></div>${installCard(true)}</div>`;
 }
 function logoField(k,label){const v=S.perfil[k];return `<div class="field"><span class="lbl">${label}</span><div class="logoprev">${v?`<img src="${v}" alt="">`:`<span class="hint">Sin imagen</span>`}</div><div class="row"><label class="btn sm" for="in_${k}">${v?"Cambiar":"Cargar imagen"}</label><input id="in_${k}" type="file" accept="image/*" data-logo="${k}" hidden>${v?`<button class="btn sm ghost" type="button" data-dellogo="${k}">Quitar</button>`:""}</div></div>`}
 function afterPerfil(){document.querySelectorAll("[data-logo]").forEach(el=>el.onchange=async e=>{const f=e.target.files[0];if(!f)return;try{S.perfil[el.dataset.logo]=await shrink(f,360,.9,"image/png");save();render(true)}catch(x){toast("No se pudo leer la imagen.")}})}
@@ -431,6 +453,8 @@ document.addEventListener("click",async e=>{
   if(d.dellogo){ delete S.perfil[d.dellogo]; save(); return render(true); }
   switch(d.act){
     case "perfil": S.perfil=S.perfil||{}; return go("perfil");
+    case "instalar": return instalar();
+    case "instalarNo": try{localStorage.setItem("instalarOculto",String(Date.now()+7*864e5))}catch(e){} return render(true);
     case "inicio": return go("inicio");
     case "next": S.step=Math.min(S.step+1,pasos(S.cur).length-1); return render();
     case "prev": S.step=Math.max(S.step-1,0); return render();
