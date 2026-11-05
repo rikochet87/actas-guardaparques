@@ -34,6 +34,10 @@ function fechaNum(f){return f?f.split("-").reverse().join("/"):"__/__/____"}
 function nombreInfr(a){const i=a.infractor||{}; if(i.esEmpresa) return i.razonSocial||"Sin identificar"; const n=[i.apellido,i.nombre].filter(Boolean).join(", "); return n||"Sin identificar";}
 function nombrePersona(p){return [p.apellido,p.nombre].filter(Boolean).join(", ")}
 const isInfr=a=>a.tipo==="infraccion";
+const num=v=>parseFloat(String(v??"").replace(",","."));
+function coordsOk(a){const la=num(a.lat),lo=num(a.lon);return isFinite(la)&&isFinite(lo)&&Math.abs(la)<=90&&Math.abs(lo)<=180&&!(la===0&&lo===0)}
+function mapsUrl(a){return `https://www.google.com/maps?q=${num(a.lat).toFixed(5)},${num(a.lon).toFixed(5)}`}
+function qrSrc(text){try{if(typeof qrcode==="undefined")return null;const q=qrcode(0,"M");q.addData(text);q.make();return q.createDataURL(6,2)}catch(e){return null}}
 
 function nuevaActa(tipo){
   const p=S.perfil||{}; const n=nowParts();
@@ -149,7 +153,7 @@ function afterPerfil(){document.querySelectorAll("[data-logo]").forEach(el=>el.o
 /* ============ Editor ============ */
 function pasos(a){ return isInfr(a)?["Lugar y fecha","Infractor","Hechos","Secuestro y fotos","Testigos","Firmas"]:["Lugar y fecha","Presentes","Se constata","Fotos","Testigos","Firmas"]; }
 function stepOk(a,i){ const inf=isInfr(a), I=a.infractor;
-  return [()=>!!(a.area&&a.paraje&&a.fecha&&a.hora&&(!inf||a.lugarActa)),
+  return [()=>!!(a.area&&a.paraje&&a.fecha&&a.hora&&(!inf||a.lugarActa)&&coordsOk(a)),
           ()=>!inf||!!((I.esEmpresa?I.razonSocial:I.apellido)&&(I.docNum||I.cuit)),
           ()=>a.hechos.trim().length>10&&(!inf||!!a.normativa.trim()),
           ()=>true,()=>true,
@@ -166,10 +170,16 @@ function sLugar(a){
   ${a.area.startsWith("Otra")?fld("areaOtra","Nombre del área",{req:true}):""}
   ${inf?fld("lugarActa","Lugar de confección del acta",{req:true,ph:"Ej.: Seccional Yacaré"}):""}
   ${fld("paraje",inf?"Paraje conocido como":"Lugar donde se constituye",{req:true,type:"textarea",ph:"Ej.: Picada al Carpincho, km 2, a 300 m del puesto de control"})}
-  <div class="gps"><span class="coords" id="coords">${a.lat?`${esc(a.lat)}, ${esc(a.lon)}${a.prec?` <span class="hint">± ${esc(a.prec)} m</span>`:""}`:"Sin coordenadas"}</span><button class="btn sm" type="button" data-act="gps">Tomar ubicación GPS</button></div>
+  <div class="field"><span class="lbl req">Ubicación GPS</span><div class="gps ${coordsOk(a)?"ok":""}" id="gpsBox">${coordsHTML(a)}<button class="btn sm" type="button" data-act="gps">${coordsOk(a)?"Volver a tomar":"Tomar ubicación"}</button></div></div>
   <div class="grid2">${fld("lat","Latitud",{im:"decimal",ph:"-27.06000"})}${fld("lon","Longitud",{im:"decimal",ph:"-60.52000"})}</div>
-  <p class="hint">Las coordenadas van en el anexo del acta, sin alterar el texto del modelo oficial.</p>
+  <p class="hint">Se toma sola al abrir el acta y es obligatoria para cerrarla. Sin GPS, escribí las coordenadas a mano. En el acta impresa van al pie, con un código QR que abre el lugar en el mapa.</p>
   <div class="grid2">${fld("fecha","Fecha",{type:"date",req:true})}${fld("hora","Hora",{type:"time",req:true})}</div></section>`;
+}
+function coordsHTML(a){
+  if(S.gpsBusy===a.id) return `<span class="coords" id="coords"><span class="pulse"></span>Buscando señal GPS…${a.prec?` <span class="hint">mejor lectura ± ${esc(a.prec)} m</span>`:""}</span>`;
+  if(!coordsOk(a)) return `<span class="coords" id="coords">Sin coordenadas</span>`;
+  const p=Number(a.prec); const flojo=p>50;
+  return `<span class="coords" id="coords">${esc(a.lat)}, ${esc(a.lon)}${a.prec?` <span class="hint ${flojo?"warn":""}">± ${esc(a.prec)} m${flojo?" · precisión baja, conviene volver a tomarla a cielo abierto":""}</span>`:` <span class="hint">cargada a mano</span>`}</span>`;
 }
 function sInfractor(a){
   const i=a.infractor;
@@ -240,7 +250,7 @@ function sTestigos(a){
 }
 function sFirmas(a){
   const inf=isInfr(a); const T=a.testigos.map((t,k)=>({t,k})).filter(x=>x.t.nombre);
-  const chk=[["Lugar y fecha",stepOk(a,0)],...(inf?[["Datos del infractor",stepOk(a,1)]]:[]),[inf?"Hechos y normativa":"Lo constatado",stepOk(a,2)],...(a.firmaPapel?[["Firmas sobre el papel impreso",true]]:[["Firma del funcionario actuante",!!a.firmas.guardaparque],...(inf?[["Firma del infractor o constancia de negativa",!!(a.firmas.infractor||a.negoFirma)]]:[])])];
+  const chk=[["Lugar, fecha y ubicación GPS",stepOk(a,0)],...(inf?[["Datos del infractor",stepOk(a,1)]]:[]),[inf?"Hechos y normativa":"Lo constatado",stepOk(a,2)],...(a.firmaPapel?[["Firmas sobre el papel impreso",true]]:[["Firma del funcionario actuante",!!a.firmas.guardaparque],...(inf?[["Firma del infractor o constancia de negativa",!!(a.firmas.infractor||a.negoFirma)]]:[])])];
   return `<section class="panel"><h2>Lectura y firmas</h2><p class="lead">Mostrá el acta en pantalla o leela en voz alta antes de pedir firmas.</p>
   <button class="btn" type="button" data-act="preview">Ver acta completa</button>
   ${fld("guardaparque.nombre","Funcionario actuante",{req:true})}
@@ -335,6 +345,7 @@ function docHTML(a,copia="ORIGINAL",opt={anexo:true,fotos:true}){
      ${firma(a.firmas.guardaparque,"FUNCIONARIO ACTUANTE",`${a.guardaparque.nombre||""}${a.guardaparque.legajo?" · Leg. N° "+a.guardaparque.legajo:""}`)}
     </div>`;
   }
+  if(coordsOk(a)){ const u=mapsUrl(a), q=qrSrc(u); h+=`<div class="dqr">${q?`<img src="${q}" alt="Código QR de la ubicación">`:""}<div><b>Ubicación del ${isInfr(a)?"hecho":"lugar constatado"}</b><span>${esc(num(a.lat).toFixed(5))}, ${esc(num(a.lon).toFixed(5))} (WGS84)${a.prec?` · ± ${esc(a.prec)} m`:""}</span><span>${q?"Escaneá el código para abrir el lugar en el mapa.":esc(u)}</span></div></div>`; }
   if(opt.anexo) h+=anexo(a,opt);
   h+=a.estado==="cerrada"?`<div class="integridad">Cerrada el ${new Date(a.cerrada).toLocaleString("es-AR")} · Código de integridad SHA-256: ${esc(a.hash)}</div>`:`<div class="integridad">BORRADOR · sin número ni código de integridad</div>`;
   return h+`</article>`;
@@ -343,7 +354,7 @@ function anexo(a,opt={fotos:true}){
   const inf=isInfr(a), G=a.ganado||{}, v=a.vehiculo||{}, i=a.infractor||{};
   const rows=[];
   rows.push(["Hora",a.hora?a.hora+" h":""]);
-  if(a.lat&&a.lon) rows.push(["Coordenadas (WGS84)",`${a.lat}, ${a.lon}${a.prec?` (± ${a.prec} m)`:""}`]);
+  if(coordsOk(a)) rows.push(["Ubicación en el mapa",mapsUrl(a)]);
   if(inf&&(i.telefono||i.email)) rows.push(["Contacto del infractor",[i.telefono,i.email].filter(Boolean).join(" · ")]);
   if(v.dominio||v.marca||v.tipo) rows.push(["Vehículo",[v.tipo,v.marca,v.color,v.dominio&&"dominio "+v.dominio].filter(Boolean).join(", ")]);
   if(a.rubros.length) rows.push(["Conductas (listado APN)",a.rubros.map(id=>ITEMS[id]?`${ITEMS[id].art} ${ITEMS[id].g.r}: ${ITEMS[id].t}`:"").filter(Boolean).join(" | ")]);
@@ -386,7 +397,7 @@ function save(){
 async function sha256(t){ try{ const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join(""); }catch(e){ let h=0; for(const c of t) h=(h*31+c.charCodeAt(0))|0; return "simple-"+(h>>>0).toString(16); } }
 function proxNumero(a){ const p=S.perfil||{}; const k=isInfr(a)?"proxInf":"proxConst"; const n=Number(p[k])||1; return {k,n,num:`${p.prefijo?p.prefijo.toUpperCase()+"-":""}${a.fecha.slice(0,4)}-${pad(n,3)}`}; }
 function cerrar(){
-  const a=S.cur; const bad=pasos(a).map((t,i)=>[t,stepOk(a,i)]).filter(x=>!x[1]);
+  const a=S.cur; const bad=pasos(a).map((t,i)=>[i===0&&!coordsOk(a)?(a.paraje&&a.area?"la ubicación GPS":"Lugar, fecha y ubicación GPS"):t,stepOk(a,i)]).filter(x=>!x[1]);
   if(bad.length){ toast("Falta completar: "+bad.map(x=>x[0]).join(", ")+"."); return; }
   modal(`<h3>¿Cerrar el acta N° ${esc(proxNumero(a).num)}?</h3><p>Se le asigna ese número y ya no se puede modificar. Revisá que los datos estén bien.</p><div class="row"><button class="btn grow" type="button" data-act="modalno">Revisar</button><button class="btn primary grow" type="button" data-act="cerrarok">Cerrar y numerar</button></div>`);
 }
@@ -399,7 +410,7 @@ async function cerrarOk(){
 }
 
 /* ============ Exportar / compartir ============ */
-function resumen(a){ const inf=isInfr(a); return `${inf?"ACTA DE INFRACCIÓN":"ACTA DE CONSTATACIÓN"} N° ${a.numero}\n${areaNombre(a)}\n${fechaNum(a.fecha)} ${a.hora} · ${a.paraje}\n${inf?"Persona infractora: "+nombreInfr(a)+" ("+(a.infractor.docTipo||"")+" "+(a.infractor.docNum||"")+")\nContraviniendo: "+a.normativa+"\n":""}${inf?"Hechos":"Se constata que"}: ${a.hechos}\n${inf?"\nPodrá presentar descargo en el término de CINCO (5) días hábiles (Dto. 300/2022).\n":""}\nCódigo de integridad: ${a.hash}`; }
+function resumen(a){ const inf=isInfr(a); return `${inf?"ACTA DE INFRACCIÓN":"ACTA DE CONSTATACIÓN"} N° ${a.numero}\n${areaNombre(a)}\n${fechaNum(a.fecha)} ${a.hora} · ${a.paraje}\n${inf?"Persona infractora: "+nombreInfr(a)+" ("+(a.infractor.docTipo||"")+" "+(a.infractor.docNum||"")+")\nContraviniendo: "+a.normativa+"\n":""}${inf?"Hechos":"Se constata que"}: ${a.hechos}\n${inf?"\nPodrá presentar descargo en el término de CINCO (5) días hábiles (Dto. 300/2022).\n":""}${coordsOk(a)?"\nUbicación: "+mapsUrl(a):""}\nCódigo de integridad: ${a.hash}`; }
 async function compartir(){
   const a=S.cur, txt=resumen(a);
   try{ if(navigator.share){ await navigator.share({title:"Acta N° "+a.numero,text:txt}); return; } }catch(e){ if(e&&e.name==="AbortError") return; }
@@ -415,12 +426,26 @@ function exportar(){
 }
 
 /* ============ GPS ============ */
-function gps(){
-  const el=$("#coords"); if(!navigator.geolocation){ toast("Este dispositivo no ofrece ubicación. Cargá las coordenadas a mano."); return; }
-  el.textContent="Buscando señal…";
-  navigator.geolocation.getCurrentPosition(p=>{ const a=S.cur; a.lat=p.coords.latitude.toFixed(5); a.lon=p.coords.longitude.toFixed(5); a.prec=String(Math.round(p.coords.accuracy)); save(); render(true); toast("Ubicación tomada (± "+a.prec+" m)."); },
-    e=>{ el.textContent=S.cur.lat?`${S.cur.lat}, ${S.cur.lon}`:"Sin coordenadas"; toast(e.code===1?"Permiso de ubicación denegado. Habilitalo o cargá las coordenadas a mano.":"No se obtuvo señal GPS. Probá a cielo abierto o cargalas a mano."); },
-    {enableHighAccuracy:true,timeout:20000,maximumAge:30000});
+let gpsWatch=null, gpsT=null;
+function paintCoords(a){ if(S.cur!==a||S.view!=="editor"||S.step!==0) return; const box=$("#gpsBox"); if(!box) return;
+  box.classList.toggle("ok",coordsOk(a)&&S.gpsBusy!==a.id); box.querySelector(".coords").outerHTML=coordsHTML(a);
+  const b=box.querySelector("button"); if(b){b.textContent=S.gpsBusy===a.id?"Detener":coordsOk(a)?"Volver a tomar":"Tomar ubicación";}
+  ["lat","lon"].forEach(k=>{const el=$("#"+k); if(el&&document.activeElement!==el) el.value=a[k]||"";});
+  document.querySelectorAll('.step[data-step="0"]').forEach(s=>s.classList.toggle("done",S.step!==0&&stepOk(a,0))); }
+function gpsStop(){ if(gpsWatch!=null&&navigator.geolocation) navigator.geolocation.clearWatch(gpsWatch); gpsWatch=null; clearTimeout(gpsT); }
+function gps(auto){
+  const a=S.cur; if(!a||(auto&&window.self!==window.top)) return;
+  if(S.gpsBusy===a.id&&!auto){ gpsStop(); S.gpsBusy=null; paintCoords(a); return; }
+  if(!navigator.geolocation){ if(!auto) toast("Este dispositivo no ofrece ubicación. Cargá las coordenadas a mano."); return; }
+  gpsStop(); S.gpsBusy=a.id; let best=null; paintCoords(a);
+  const fin=(msg)=>{ gpsStop(); if(S.gpsBusy===a.id) S.gpsBusy=null; paintCoords(a); if(msg) toast(msg); };
+  gpsWatch=navigator.geolocation.watchPosition(p=>{
+      if(S.cur!==a) return fin();
+      if(!best||p.coords.accuracy<best.coords.accuracy){ best=p; a.lat=p.coords.latitude.toFixed(5); a.lon=p.coords.longitude.toFixed(5); a.prec=String(Math.round(p.coords.accuracy)); a.gpsHora=new Date().toISOString(); save(); paintCoords(a); }
+      if(p.coords.accuracy<=15) fin("Ubicación tomada (± "+a.prec+" m).");
+    },e=>{ if(best) return fin("Ubicación tomada (± "+a.prec+" m)."); fin(e.code===1?"Permiso de ubicación denegado. Habilitalo en el teléfono o cargá las coordenadas a mano.":"No se obtuvo señal GPS. Probá a cielo abierto o cargalas a mano."); },
+    {enableHighAccuracy:true,maximumAge:0,timeout:30000});
+  gpsT=setTimeout(()=>fin(best?"Ubicación tomada (± "+a.prec+" m).":"No se obtuvo señal GPS en 30 s. Probá a cielo abierto o cargalas a mano."),30000);
 }
 
 /* ============ UI auxiliar ============ */
@@ -435,14 +460,15 @@ document.addEventListener("input",e=>{
   const tgt=S.view==="perfil"?S.perfil:S.cur; if(!tgt) return;
   setPath(tgt,p,e.target.type==="checkbox"?e.target.checked:e.target.value);
   if(p==="normativa") S.cur.normativaManual=true;
+  if(p==="lat"||p==="lon"){ S.cur.prec=""; if(S.gpsBusy===S.cur.id){gpsStop();S.gpsBusy=null;} paintCoords(S.cur); }
   save();
   if(RERENDER.has(p)) render(true);
 });
 document.addEventListener("click",async e=>{
   const b=e.target.closest("button"); if(!b) return; const d=b.dataset;
   if(b.id==="topBtn"){ S.perfil=S.perfil||{}; return go(S.view==="inicio"?"perfil":"inicio"); }
-  if(d.new){ S.cur=nuevaActa(d.new); S.step=0; S.busca=""; S.view="editor"; render(); return; }
-  if(d.open){ S.cur=S.actas.find(a=>a.id===d.open); S.step=0; S.busca=""; S.view=S.cur.estado==="cerrada"?"ver":"editor"; render(); return; }
+  if(d.new){ S.cur=nuevaActa(d.new); S.step=0; S.busca=""; S.view="editor"; render(); gps(true); return; }
+  if(d.open){ S.cur=S.actas.find(a=>a.id===d.open); S.step=0; S.busca=""; S.view=S.cur.estado==="cerrada"?"ver":"editor"; render(); if(S.view==="editor"&&!coordsOk(S.cur)&&!S.cur.ejemplo) gps(true); return; }
   if(d.filtro){ S.filtro=d.filtro; render(); return; }
   if(d.step){ S.step=Number(d.step); render(); return; }
   if(d.rubro) return toggleRubro(d.rubro);

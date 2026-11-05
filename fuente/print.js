@@ -80,6 +80,7 @@ async function bloques(a,copia){
         else if(n.classList.contains("dphotos")){ for(const fg of n.querySelectorAll("figure")) B.push({t:"photo",src:fg.querySelector("img").src,cap:fg.querySelector("figcaption").textContent}); }
         else if(n.tagName==="P"&&!n.classList.contains("hint2")) B.push({t:"p",sz:.9,segs:segsDe(n)});
       } }
+    else if(c.contains("dqr")){ const im=el.querySelector("img"); B.push({t:"rule"}); if(im) B.push({t:"qr",src:im.src}); el.querySelectorAll("b,span").forEach((s,k)=>B.push({t:"p",al:"c",sz:k?.85:1,segs:[{s:s.textContent,b:k===0}]})); }
     else if(c.contains("integridad")) { B.push({t:"rule"}); B.push({t:"p",sz:.75,segs:[{s:el.textContent,b:false}]}); }
   }
   return B.filter(b=>b.only!==false);
@@ -110,6 +111,7 @@ async function ticketCanvas(a,W){
         if(draw){ if(im){ const sc=Math.min(h/im.height,cw*.8/im.width); x.drawImage(im,M+(cw-im.width*sc)/2,y,im.width*sc,im.height*sc);} else if(b.no){ x.font=font(.9,true); const tw=x.measureText(b.no).width; x.fillText(b.no,M+(cw-tw)/2,y+h/2);} x.fillRect(M+cw*.08,y+h+2,cw*.84,2);} y+=h+6;
         for(const ln of b.lines){ const sz=.85; const ls=wrap([{s:ln,b:/^(INFRACTOR|TESTIGO|FUNCIONARIO)/.test(ln)}],sz); for(const l of ls){ y+=base*sz*LH; if(draw){ const lw=l.reduce((s,t)=>s+t.ww,0); let xx=M+(cw-lw)/2; l.forEach(t=>{x.font=font(sz,t.b); x.fillText(t.w,xx,y-base*sz*.3); xx+=t.ww;}); } } } y+=6; }
       else if(b.t==="photo"){ const im=imgs.get(b.src); if(im){ const sc=cw/im.width; const h=Math.min(im.height*sc,cw); if(draw) x.drawImage(im,M,y+4,cw,h); y+=h+8; } const ls=wrap([{s:b.cap,b:false}],.8); ls.forEach(l=>{ y+=base*.8*LH; if(draw){ let xx=M; l.forEach(t=>{x.font=font(.8,false); x.fillText(t.w,xx,y-base*.25); xx+=t.ww;}); } }); y+=6; }
+      else if(b.t==="qr"){ const im=imgs.get(b.src); const sz=W>400?240:200; if(im&&draw){ x.imageSmoothingEnabled=false; x.drawImage(im,M+(cw-sz)/2,y+6,sz,sz); x.imageSmoothingEnabled=true; } y+=sz+12; }
       else if(b.t==="rule"){ y+=8; if(draw) x.fillRect(M,y,cw,2); y+=8; }
       else if(b.t==="cut"){ y+=26; if(draw){ x.font=font(.8,false); const s="- - - - - - cortar aquí - - - - - -"; const tw=x.measureText(s).width; x.fillText(s,M+(cw-tw)/2,y);} y+=40; }
     }
