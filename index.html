@@ -1,0 +1,1029 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1D3F30">
+<meta name="description" content="Elaboración digital de actas de infracción y de constatación para el Cuerpo de Guardaparques Nacionales.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Actas Guardaparques</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: herramienta de campo de una columna; barra de marca arriba, pasos numerados (son una secuencia real), barra de acción fija abajo. Alto contraste para uso a pleno sol. */
+:root{
+  --bg:#EDEFE8; --surface:#FFFFFF; --sunk:#E3E7DE; --ink:#16211B; --muted:#56635A; --line:#CDD3C8;
+  --brand-bg:#1D3F30; --brand-ink:#F1F4EE; --accent:#B4601A; --accent-ink:#FFFFFF;
+  --infr:#A8261D; --infr-soft:#F6E1DE; --const:#285883; --const-soft:#DFE8F1; --ok:#2B7149; --ok-soft:#DDEEE3; --warn:#8A5A00; --warn-soft:#F7EBCF;
+  --f-display:"Archivo","Arial Narrow",Arial,sans-serif;
+  --f-body:"Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1511; --surface:#17201B; --sunk:#111915; --ink:#E6ECE5; --muted:#9DA9A0; --line:#2D3932;
+  --brand-bg:#163126; --brand-ink:#E9F0EA; --accent:#E08A3C; --accent-ink:#1A1007;
+  --infr:#F08A80; --infr-soft:#3A1D1A; --const:#8DB8E0; --const-soft:#18283A; --ok:#7CC79A; --ok-soft:#173022; --warn:#E8B85C; --warn-soft:#33270F;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1511; --surface:#17201B; --sunk:#111915; --ink:#E6ECE5; --muted:#9DA9A0; --line:#2D3932;
+  --brand-bg:#163126; --brand-ink:#E9F0EA; --accent:#E08A3C; --accent-ink:#1A1007;
+  --infr:#F08A80; --infr-soft:#3A1D1A; --const:#8DB8E0; --const-soft:#18283A; --ok:#7CC79A; --ok-soft:#173022; --warn:#E8B85C; --warn-soft:#33270F;
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;margin:0;-webkit-text-size-adjust:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--brand-bg)}
+h1,h2,h3{font-family:var(--f-display);line-height:1.15;text-wrap:balance;margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* Barra superior */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--brand-bg);color:var(--brand-ink)}
+.top .wrap{display:flex;align-items:center;gap:12px;padding-block:12px;min-height:60px}
+.top h1{font-size:1.15rem;font-weight:800;letter-spacing:.01em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .sub{display:block;font-family:var(--f-body);font-weight:500;font-size:.75rem;opacity:.75;letter-spacing:.06em;text-transform:uppercase}
+.iconbtn{background:transparent;border:1px solid color-mix(in srgb,var(--brand-ink) 35%,transparent);color:var(--brand-ink);border-radius:8px;min-width:44px;height:44px;padding:0 12px;cursor:pointer;font-weight:600;font-size:.9rem}
+.mark{width:34px;height:34px;flex:none}
+
+main{padding-block:18px 120px}
+.stack{display:flex;flex-direction:column;gap:16px}
+
+/* Botones */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 18px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600;cursor:pointer;text-decoration:none}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--infr);border-color:color-mix(in srgb,var(--infr) 45%,var(--line))}
+.btn.sm{min-height:38px;padding:0 12px;font-size:.88rem}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row > .grow{flex:1;min-width:0}
+
+/* Inicio */
+.newbar{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.newcard{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:16px;border-radius:var(--r);border:2px solid var(--line);background:var(--surface);cursor:pointer;text-align:left;min-height:118px}
+.newcard strong{font-family:var(--f-display);font-size:1.15rem;font-weight:800}
+.newcard span{color:var(--muted);font-size:.86rem;line-height:1.35}
+.newcard.infr{border-color:color-mix(in srgb,var(--infr) 55%,var(--line))}
+.newcard.infr strong{color:var(--infr)}
+.newcard.const{border-color:color-mix(in srgb,var(--const) 55%,var(--line))}
+.newcard.const strong{color:var(--const)}
+@media (max-width:420px){.newbar{grid-template-columns:1fr}.newcard{min-height:0}}
+
+.notice{padding:12px 14px;border-radius:var(--r);background:var(--warn-soft);color:var(--ink);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);font-size:.92rem}
+.notice b{color:var(--warn)}
+.sectionhead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:6px}
+.sectionhead h2{font-size:1.05rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:.86rem;cursor:pointer;font-weight:500}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+.list{display:flex;flex-direction:column;gap:10px}
+.item{display:grid;grid-template-columns:6px 1fr auto;gap:0 14px;align-items:stretch;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;cursor:pointer;text-align:left;padding:0;width:100%}
+.item .stripe{background:var(--const)}
+.item.infr .stripe{background:var(--infr)}
+.item .body{padding:12px 0;min-width:0}
+.item .meta{padding:12px 14px 12px 0;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:6px}
+.item .who,.item .what,.item .num{display:block}
+.item .num{font-family:var(--f-mono);font-size:.82rem;color:var(--muted)}
+.item .who{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .what{font-size:.88rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:.74rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.pill.borrador{background:var(--warn-soft);color:var(--warn)}
+.pill.cerrada{background:var(--ok-soft);color:var(--ok)}
+.pill.ejemplo{background:var(--sunk);color:var(--muted)}
+.pill.infr{background:var(--infr-soft);color:var(--infr)}
+.pill.const{background:var(--const-soft);color:var(--const)}
+.empty{padding:28px 16px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:var(--r)}
+.tally{display:flex;gap:18px;flex-wrap:wrap;color:var(--muted);font-size:.88rem}
+.tally b{font-family:var(--f-mono);color:var(--ink);font-size:1rem;font-variant-numeric:tabular-nums}
+
+/* Editor */
+.steps{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.steps::-webkit-scrollbar{display:none}
+.step{flex:none;display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px 6px 6px;font-size:.85rem;font-weight:600;cursor:pointer;color:var(--muted)}
+.step i{font-style:normal;font-family:var(--f-mono);width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--sunk);font-size:.78rem}
+.step[aria-current="step"]{color:var(--ink);border-color:var(--ink)}
+.step[aria-current="step"] i{background:var(--ink);color:var(--bg)}
+.step.done i{background:var(--ok);color:var(--surface)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px 16px;display:flex;flex-direction:column;gap:16px}
+.panel h2{font-size:1.3rem;font-weight:800}
+.panel .lead{margin:-8px 0 0;color:var(--muted);font-size:.92rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media (max-width:560px){.grid2,.grid3{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field > label,.lbl{font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.field .req::after{content:" *";color:var(--infr)}
+input[type=text],input[type=tel],input[type=email],input[type=date],input[type=time],input[type=number],select,textarea{width:100%;min-height:48px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:16px}
+textarea{min-height:140px;resize:vertical;line-height:1.5}
+.hint{font-size:.82rem;color:var(--muted)}
+.check{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:8px;cursor:pointer;background:var(--bg)}
+.check input{width:22px;height:22px;margin:1px 0 0;flex:none;accent-color:var(--accent)}
+.gps{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px;border-radius:8px;background:var(--sunk)}
+.gps .coords{font-family:var(--f-mono);font-size:.9rem;flex:1;min-width:0}
+.rubros{display:flex;flex-wrap:wrap;gap:8px}
+.rubro{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:10px 12px;font-size:.9rem;font-weight:500;cursor:pointer;min-height:44px;text-align:left}
+.rubro[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--surface));font-weight:600}
+.subpanel{border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:12px;background:var(--bg)}
+.subpanel h3{font-size:1rem;font-weight:700}
+.lines{display:flex;flex-direction:column;gap:10px}
+.line{display:grid;grid-template-columns:1fr 90px auto;gap:8px;align-items:end}
+@media (max-width:480px){.line{grid-template-columns:1fr 70px auto}}
+.photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.photo{position:relative;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:var(--sunk)}
+.photo img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;max-width:100%}
+.photo input{border:0;border-top:1px solid var(--line);border-radius:0;min-height:40px;font-size:.85rem;background:var(--surface)}
+.photo button{position:absolute;top:6px;right:6px;width:34px;height:34px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:1.1rem;cursor:pointer}
+.sig{display:flex;flex-direction:column;gap:8px}
+.sigbox{position:relative;border:2px dashed var(--line);border-radius:8px;background:#FFFFFF;height:170px;touch-action:none}
+.sigbox canvas{width:100%;height:100%;display:block;border-radius:6px}
+.sigbox .base{position:absolute;left:16px;right:16px;bottom:34px;border-bottom:1px solid #9AA39C;pointer-events:none}
+.sigbox .ph{position:absolute;left:16px;bottom:10px;font-size:.78rem;color:#7B857E;pointer-events:none}
+.sigbox.signed{border-style:solid;border-color:var(--ok)}
+.checklist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:.92rem}
+.checklist li{display:flex;gap:8px;align-items:flex-start}
+.checklist li::before{content:"";flex:none;width:18px;height:18px;margin-top:3px;border-radius:50%;border:2px solid var(--infr)}
+.checklist li.ok::before{background:var(--ok);border-color:var(--ok)}
+.checklist li.ok{color:var(--muted)}
+
+/* Barra inferior */
+.actionbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.actionbar .wrap{display:flex;gap:10px;padding-block:10px;align-items:center}
+.actionbar .saved{font-size:.8rem;color:var(--muted);flex:1;min-width:0}
+
+/* Documento */
+.doc{background:#FFFFFF;color:#111;border:1px solid var(--line);border-radius:4px;padding:28px 22px;font-family:var(--f-body);font-size:.95rem;line-height:1.6}
+.doc .dhead{display:grid;grid-template-columns:1fr auto;gap:12px;border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:16px}
+.doc .org{font-family:var(--f-display);font-weight:800;font-size:.95rem;letter-spacing:.03em;text-transform:uppercase;line-height:1.25}
+.doc .org small{display:block;font-family:var(--f-body);font-weight:500;letter-spacing:0;text-transform:none;font-size:.82rem;color:#444}
+.doc .dnum{text-align:right;font-family:var(--f-mono);font-size:.82rem}
+.doc .dnum b{display:block;font-size:1rem}
+.doc h3.dtitle{font-family:var(--f-display);font-size:1.35rem;font-weight:800;text-align:center;letter-spacing:.08em;margin:6px 0 14px}
+.doc p{margin:0 0 10px;text-align:justify;hyphens:auto}
+.doc .ejemplo{display:inline-block;border:2px solid #A8261D;color:#A8261D;font-weight:800;padding:2px 8px;letter-spacing:.1em;font-size:.8rem;margin-bottom:8px}
+.doc table{width:100%;border-collapse:collapse;margin:6px 0 12px;font-size:.88rem}
+.doc td,.doc th{border:1px solid #999;padding:5px 7px;text-align:left;vertical-align:top}
+.doc .dphotos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0 14px}
+.doc .dphotos figure{margin:0}
+.doc .dphotos img{width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid #999}
+.doc .dphotos figcaption{font-size:.75rem;color:#444}
+.doc .firmas{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:18px;margin-top:22px}
+.doc .firma{display:flex;flex-direction:column;align-items:center;text-align:center;font-size:.8rem}
+.doc .firma img{height:70px;max-width:100%;object-fit:contain}
+.doc .firma .nofirma{height:70px;display:grid;place-items:center;font-style:italic;color:#A8261D;font-size:.78rem}
+.doc .firma .l{border-top:1px solid #111;width:100%;padding-top:4px}
+.doc .integridad{margin-top:20px;padding-top:8px;border-top:1px dashed #999;font-family:var(--f-mono);font-size:.7rem;color:#444;word-break:break-all}
+.docwrap{overflow-x:auto}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:.9rem;z-index:40;max-width:calc(100% - 32px)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;display:grid;place-items:end center;padding:16px}
+.modal .box{background:var(--surface);border-radius:12px;padding:20px;max-width:480px;width:100%;display:flex;flex-direction:column;gap:14px;margin-bottom:env(safe-area-inset-bottom,0px)}
+.modal h3{font-size:1.15rem}
+@media (prefers-reduced-motion:no-preference){.toast{animation:up .2s ease-out}@keyframes up{from{opacity:0;transform:translate(-50%,8px)}}}
+
+.mono{font-family:var(--f-mono);font-size:.9em}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media (max-width:480px){.seg{grid-template-columns:1fr}}
+.seg label{display:flex;gap:10px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);cursor:pointer;font-size:.92rem}
+.seg input{width:20px;height:20px;margin:0;accent-color:var(--accent);flex:none}
+.seg label:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface));font-weight:600}
+.logoprev{height:96px;border:1px dashed var(--line);border-radius:8px;display:grid;place-items:center;background:#FFFFFF;overflow:hidden}
+.logoprev img{max-height:86px;max-width:90%;object-fit:contain}
+.logoprev .hint{color:#6B746E}
+/* Catálogo de infracciones */
+.selitems{display:flex;flex-direction:column;gap:6px}
+.selitem{display:block;text-align:left;border:1px solid var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface));border-radius:8px;padding:10px 12px;font-size:.9rem;cursor:pointer;line-height:1.35}
+.selitem b{font-family:var(--f-mono);font-weight:500;font-size:.82rem;margin-right:6px;color:var(--accent)}
+.selitem span{float:right;font-size:1.1rem;line-height:1;margin-left:8px;color:var(--muted)}
+.cat{display:flex;flex-direction:column;gap:6px;max-height:420px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;padding:6px;background:var(--bg)}
+.cat details{border-radius:6px;background:var(--surface);border:1px solid var(--line)}
+.cat summary{display:flex;gap:10px;align-items:center;padding:10px 12px;cursor:pointer;list-style:none;font-size:.88rem;line-height:1.3}
+.cat summary::-webkit-details-marker{display:none}
+.cat summary::before{content:"";flex:none;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(-45deg);transition:transform .15s}
+.cat details[open] summary::before{transform:rotate(45deg)}
+.cat summary .grow{flex:1;min-width:0}
+.cat summary .res{display:block;font-family:var(--f-mono);font-size:.76rem;color:var(--muted);margin-top:2px}
+.catitems{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.catitem{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;text-align:left;background:transparent;border:0;border-bottom:1px solid var(--line);padding:10px 12px;font-size:.9rem;cursor:pointer;line-height:1.35;min-height:44px}
+.catitem:last-child{border-bottom:0}
+.catitem .art{font-family:var(--f-mono);font-size:.76rem;color:var(--muted);white-space:nowrap;padding-top:2px}
+.catitem[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 14%,var(--surface));font-weight:600}
+.catitem[aria-pressed="true"] .art{color:var(--accent)}
+/* Documento según modelo oficial */
+.doc .dlogos{display:grid;grid-template-columns:92px 1fr 92px;align-items:center;gap:10px;margin-bottom:10px}
+.doc .dlogos img{width:92px;height:92px;object-fit:contain}
+.doc .logoph{width:84px;height:84px;border:1px dashed #AAA;border-radius:50%;display:grid;place-items:center;text-align:center;font-size:.62rem;color:#888;padding:6px;line-height:1.2}
+.doc .dinst{text-align:center;font-family:Georgia,"Times New Roman",serif;font-size:.85rem;line-height:1.4;color:#222}
+.doc .dorig{display:flex;flex-direction:column;align-items:flex-end;font-size:.8rem;color:#333;gap:2px}
+.doc .dorig span:first-child{font-weight:600;letter-spacing:.04em}
+.doc .dconst{flex-direction:row;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin:6px 0 12px}
+.doc .dconst .dtitle{margin:0;flex:1;text-align:center}
+.doc h3.dtitle.u{text-decoration:underline;text-underline-offset:4px}
+.doc .v{border-bottom:1px dotted #555;padding:0 2px;font-weight:600;color:#0B2A55;font-family:var(--f-body)}
+.doc p.ind{text-indent:2.2em}
+.doc .firmas.f3{grid-template-columns:repeat(3,1fr)}
+.doc .firmas.f2{grid-template-columns:1fr 1fr}
+@media (max-width:480px){.doc .firmas.f3{grid-template-columns:1fr 1fr}}
+.doc .firma .l{display:flex;flex-direction:column;gap:2px}
+.doc .firma .l b{font-weight:600;letter-spacing:.03em}
+.doc .firma .acl{font-size:.74rem;color:#444;min-height:1em}
+.doc .firma .nofirma.muted{color:#777}
+.doc .danexo{margin-top:26px;padding-top:12px;border-top:2px solid #111}
+.doc .danexo h4{font-family:var(--f-display);font-size:.95rem;letter-spacing:.05em;text-transform:uppercase;margin:0 0 2px}
+.doc .danexo h5{font-size:.85rem;margin:12px 0 4px}
+.doc .danexo .hint2{font-size:.78rem;color:#555;margin-bottom:8px}
+.doc .danexo th{width:34%;background:#F2F2F2;font-weight:600}
+
+.modal .box{max-height:calc(100vh - 32px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow-y:auto}
+.prhead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.seg.seg3{grid-template-columns:repeat(3,1fr)}
+@media (max-width:480px){.seg.seg3{grid-template-columns:1fr}}
+.check.tight{padding:8px 10px}
+.prprev{max-height:340px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;background:var(--sunk);padding:10px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.prprev img{width:100%;max-width:300px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.18);image-rendering:pixelated}
+.prstatus{font-size:.9rem;min-height:0}
+.prstatus:empty{display:none}
+.prstatus .bar{display:block;height:6px;border-radius:3px;background:var(--sunk);margin-top:6px;overflow:hidden}
+.prstatus .bar i{display:block;height:100%;background:var(--accent);transition:width .2s}
+.stack.tightstack{gap:8px}
+#printArea{display:none}
+
+@media print{
+  @page{size:A4;margin:14mm}
+  body.printing .top,body.printing main,body.printing .actionbar,body.printing #modalRoot{display:none!important}
+  body.printing #printArea{display:block!important}
+  #printArea .doc{border:0;padding:0;page-break-after:always;break-after:page;font-size:10pt;line-height:1.45}
+  #printArea .doc .dlogos{grid-template-columns:70px 1fr 70px;margin-bottom:4px}
+  #printArea .doc .dlogos img{width:70px;height:70px}
+  #printArea .doc .logoph{width:64px;height:64px}
+  #printArea .doc p{margin-bottom:6px}
+  #printArea .doc .firmas{margin-top:12px}
+  #printArea .doc .firma img,#printArea .doc .firma .nofirma{height:56px}
+  #printArea .doc .danexo{margin-top:12px;padding-top:6px;font-size:9pt}
+  #printArea .doc table{margin:2px 0 6px}
+  #printArea .doc td,#printArea .doc th{padding:3px 6px}
+  #printArea .doc:last-child{page-break-after:auto;break-after:auto}
+  .doc .firmas,.doc .firma{break-inside:avoid}
+
+  body{background:#fff}
+  body::before,.top,.actionbar,.noprint,.toast{display:none!important}
+  main{padding:0}
+  .wrap{max-width:none;padding:0}
+  .doc{border:0;padding:0}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <svg class="mark" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3 L31 21 H25 L34 35 H6 L15 21 H9 Z" fill="currentColor" opacity=".95"/><rect x="18" y="31" width="4" height="7" fill="currentColor"/></svg>
+    <h1 id="topTitle">Actas Guardaparques<span class="sub" id="topSub">Administración de Parques Nacionales</span></h1>
+    <button class="iconbtn" id="topBtn" type="button">Mis datos</button>
+  </div>
+</header>
+<main><div class="wrap" id="view"></div></main>
+<div class="actionbar" id="actionbar" hidden><div class="wrap" id="actions"></div></div>
+<div id="modalRoot"></div>
+
+<script>
+/* Listado de infracciones frecuentes a reglamentos y normativas de la APN (transcripto de la planilla de referencia) */
+const REGS=[
+ {id:"fau",n:"Reglamento para la Protección y Manejo de la Fauna Silvestre en jurisdicción de la APN",r:"Res. HD N° 157/1991",it:[
+  ["Art. 6° inc. a)","Cazar, pescar, hostigar, herir, capturar o apresar fauna, o actuar sobre su hábitat o nidos"],
+  ["Art. 6° inc. b)","Introducción de especies, embriones o huevos"],
+  ["Art. 6° inc. d)","Tenencia o portación de armas"],
+  ["Art. 6° inc. e)","Tenencia y/o uso de trampas, redes, cebaderos, etc."],
+  ["Art. 6° inc. f)","Tenencia o uso de venenos o tóxicos"],
+  ["Art. 6° inc. g)","Tenencia de ejemplares vivos o traslado de productos y/o subproductos de fauna silvestre"],
+  ["Art. 6° inc. h)","Introducción y/o tenencia de animales domésticos (incluye ganado)"],
+  ["Art. 28°","Transporte de individuos, productos o subproductos de fauna silvestre de origen APN sin remito"]]},
+ {id:"for",n:"Reglamento Forestal para los MN, PN y RN de la Región Andino-Patagónica",r:"Res. HD N° 11/1994",it:[
+  ["Art. 13°","Volteo o remoción de productos forestales sin autorización"],
+  ["Art. 89°","Fuego en sitios no habilitados"],
+  ["Art. 132°","Daños al bosque o aprovechamientos no autorizados"]]},
+ {id:"mas",n:"Reglamento para la Tenencia de Perros, Gatos y otras Mascotas en la APN",r:"Res. HD N° 59/2013",it:[
+  ["Art. 2°","Presencia de perros sin autorización expresa de la APN"],
+  ["Art. 6°","Ingreso con mascotas"]]},
+ {id:"pes",n:"Reglamento General para la Pesca Deportiva Continental Patagónica",r:"Res. HD N° 384/2021",nota:"Se aprueba cada temporada por resolución específica",it:[
+  ["Art. 2°","Pesca sin permiso"],
+  ["Arts. 6° y 7°","Pesca fuera de horario (luz diurna) o fuera de temporada"],
+  ["Art. 10°","Pesca de especies nativas prohibidas"]]},
+ {id:"cul",n:"Reglamento para la Conservación del Patrimonio Cultural en jurisdicción de la APN",r:"Res. INT N° 115/2001",it:[
+  ["Art. 1°","Acciones contra recursos culturales arqueológicos, históricos o antropológicos (excavar, remover, inscribir, desplazar, retirar material, encender fuego u otra acción que altere el recurso o su ubicación)"]]},
+ {id:"gen",n:"Reglamento de Infracciones Generales",r:"Res. N° 871/1976",it:[
+  ["Art. 1° inc. d)","Violar un dispositivo de seguridad (acampe en sitios no habilitados)"],
+  ["Art. 1° inc. c)","Desobedecer las órdenes del personal de Guardaparques"],
+  ["Art. 1° inc. k)","Dar a sabiendas avisos falsos que motiven la intervención del personal de Guardaparques"]]},
+ {id:"tur",n:"Reglamento para el Otorgamiento de Permisos de Servicios Turísticos",r:"Res. HD N° 68/2008 (T.O. Res. 240/2011)",it:[
+  ["Art. 4°","Excursiones terrestres, trekking, escalada, cabalgatas o buceo sin permiso"],
+  ["Art. 5° inc. 5.7)","Vehículo de transporte no habilitado"],
+  ["Art. 6°","Excursión sin guía habilitado"]]},
+ {id:"gui",n:"Reglamento de Guías en Áreas Protegidas Nacionales",r:"Res. HD N° 113/2019",it:[
+  ["Art. 5°","Guiar sin habilitación (guías de turismo, de sitio o especializados)"],
+  ["Art. 38°","Incumplimiento de obligaciones del guía (cumplir normativas, portar credencial, acompañar al grupo, chofer-guía hasta 15 pax)"]]},
+ {id:"car",n:"Reglamento de Prohibición de Cartelería, Afiches o Elementos Publicitarios",r:"Res. N° 2008/1974",it:[
+  ["Art. 1°","Cartelería o cualquier elemento publicitario sin autorización de la APN"]]},
+ {id:"eve",n:"Reglamento para la Realización de Eventos Especiales en jurisdicción de la APN",r:"Res. HD N° 66/2013",it:[
+  ["Art. 14°","Realización de evento sin autorización de la APN"],
+  ["Art. 16°","Incumplimiento de las obligaciones del organizador"]]},
+ {id:"fot",n:"Reglamento de Fotógrafos y Video Operadores Profesionales en Áreas Protegidas Nacionales",r:"Res. HD N° 231/2011",it:[
+  ["Art. 12°","Contravención a las obligaciones generales de conservación y de servicio"],
+  ["Art. 16°","Ejercer la actividad de fotógrafo o video operador sin estar habilitado"]]},
+ {id:"dro",n:"Reglamento para el Uso de Vehículos Aéreos No Tripulados en Áreas Protegidas de la APN",r:"Res. HD N° 9/2021",it:[
+  ["Art. 4°","Uso de drones (VANT) en RNE, RNS y ZI, uso deportivo y/o recreativo, o drones con combustible"],
+  ["Art. 7°","Uso científico, en filmaciones o eventos sin autorización"],
+  ["Arts. 22°, 23° y 24°","Incumplimiento de recaudos generales y/o particulares de uso"]]},
+ {id:"agu",n:"Prohibición de Motos de Agua y Esquí Acuático",r:"Res. HD N° 143/2005",it:[
+  ["Art. 2°","Uso de motos de agua o similares"],
+  ["Art. 3°","Práctica de esquí acuático o actividades similares"]]},
+ {id:"veh",n:"Prohibición de Tránsito Vehicular por Caminos, Sendas o Huellas No Autorizados",r:"Res. HD N° 509/2017",it:[
+  ["Art. 2°","Tránsito de vehículos o motos de nieve fuera de caminos, huellas o sitios habilitados"]]},
+ {id:"eia",n:"Reglamento para la Evaluación de Impacto Ambiental en la APN",r:"Res. HD N° 203/2016",it:[
+  ["Art. 2°","Obras, instalaciones, prestaciones de servicios o aprovechamiento de recursos naturales sin Evaluación de Impacto Ambiental"]]},
+ {id:"can",n:"Reglamento para la Explotación de Canteras y Remoción de Suelos en la APN",r:"Res. HD N° 128/1997",it:[
+  ["Art. 5°","Extracción de áridos, cateos o movimiento de suelos sin autorización de la APN"],
+  ["Art. 6°","Extracción sin ajuste a las condiciones autorizadas"]]},
+ {id:"con",n:"Reglamento de Construcciones",r:"Res. HD N° 241/2007",it:[
+  ["Art. 2°","Construcciones sin autorización de la APN"]]},
+ {id:"mue",n:"Reglamento para la Construcción y Uso de Rampas y Muelles en los Espejos de Agua de la APN",r:"Res. HD N° 179/2021",it:[
+  ["","Construcción o instalación de muelle sin autorización de la APN"],
+  ["","Marinas, boyas o muertos de amarre sin autorización de la APN"]]},
+ {id:"ley",n:"Ley N° 22.351 — Prohibiciones generales",r:"Ley N° 22.351",it:[
+  ["Art. 5°","En Parque Nacional: minería, industrias, explotación agropecuaria o forestal, pesca comercial, introducción de exóticas, modificación del paisaje o equilibrio biológico, sobrevuelo de aeronaves sin límite de altura"]]},
+ {id:"pla",n:"Reglamento para la Reducción Progresiva y Prohibición Específica de los Plásticos en jurisdicción de la APN",r:"Res. HD N° 19/2020",it:[
+  ["Art. 3°","Ofrecimiento, entrega, distribución o comercialización de productos plásticos de un solo uso"]]},
+ {id:"inv",n:"Reglamento de Investigación Científica en la APN",r:"Res. HD N° ___/2016",it:[
+  ["Art. 51 inc. 1","Investigación sin la autorización correspondiente"],
+  ["Art. 51 inc. 2","Falsedad en los datos consignados al solicitar autorización"],
+  ["Art. 51 inc. 3","Falta de informes parciales y/o final, publicaciones o constancia de depósito del material"],
+  ["Art. 51 inc. 4","Participación de investigadores asistentes no autorizados"],
+  ["Art. 51 inc. 5","Trabajo en condiciones, horario y/o sitios no autorizados"],
+  ["Art. 51 inc. 6","Apertura de picadas sin autorización de la APN"],
+  ["Art. 51 inc. 7","Recolección de material no autorizado"],
+  ["Art. 51 inc. 8","Metodología distinta a la descripta en la autorización"],
+  ["Art. 51 inc. 9","Falta de notificación de muerte accidental del ejemplar de fauna investigado"],
+  ["Art. 51 inc. 10","Falta de notificación de hallazgos paleontológicos y/o culturales"],
+  ["Art. 51 inc. 11","Depósito o cambio de lugar del material recolectado sin autorización"],
+  ["Art. 51 inc. 12","Utilización de material recolectado para fines no autorizados"],
+  ["Art. 51 inc. 13","Pérdida, sustracción, contaminación o destrucción de recursos durante la investigación"],
+  ["Art. 51 inc. 14","Extravío, destrucción, daño o sustracción de documentos históricos resguardados por la APN"]]},
+ {id:"res",n:"Reglamento para la Eliminación de Residuos y Desperdicios",r:"Res. N° 664/1976",it:[
+  ["Art. 1°","Arrojar objetos de cualquier tipo dentro de las áreas de jurisdicción de la APN"]]},
+ {id:"gan",n:"Procedimiento para la erradicación del ganado exótico no autorizado",r:"Res. APN N° 467/2017",it:[
+  ["","Ganado no autorizado dentro del área protegida (habilita el cuadro de hacienda)"]]}
+];
+const ITEMS={}; REGS.forEach(g=>g.it.forEach((x,k)=>{ITEMS[g.id+k]={id:g.id+k,g,art:x[0],t:x[1]}}));
+
+"use strict";
+/* ============ Catálogos ============ */
+const AREAS=[["Parque Nacional Aconquija","ACQ"],["Parque Nacional Baritú","BAR"],["Parque Nacional Bosques Petrificados de Jaramillo","BPJ"],["Parque Nacional Calilegua","CAL"],["Parque Nacional Campos del Tuyú","CTU"],["Parque Nacional Chaco","CHA"],["Parque Nacional Ciervo de los Pantanos","CDP"],["Parque Nacional Copo","COP"],["Parque Nacional El Impenetrable","EIM"],["Parque Nacional El Leoncito","ELE"],["Parque Nacional El Palmar","EPA"],["Parque Nacional El Rey","ERE"],["Parque Nacional Iberá","IBE"],["Parque Nacional Iguazú","IGU"],["Parque Nacional Islas de Santa Fe","ISF"],["Parque Nacional Lago Puelo","LPU"],["Parque Nacional Laguna Blanca","LBL"],["Parque Nacional Lanín","LAN"],["Parque Nacional Lihué Calel","LCA"],["Parque Nacional Los Alerces","LAL"],["Parque Nacional Los Arrayanes","LAR"],["Parque Nacional Los Cardones","LCR"],["Parque Nacional Los Glaciares","LGL"],["Parque Nacional Monte León","MLE"],["Parque Nacional Mburucuyá","MBU"],["Parque Nacional Nahuel Huapi","NHU"],["Parque Nacional Patagonia","PAT"],["Parque Nacional Perito Moreno","PMO"],["Parque Nacional Predelta","PRE"],["Parque Nacional Quebrada del Condorito","QCO"],["Parque Nacional Río Pilcomayo","RPI"],["Parque Nacional San Guillermo","SGU"],["Parque Nacional Sierra de las Quijadas","SQU"],["Parque Nacional Talampaya","TAL"],["Parque Nacional Tierra del Fuego","TDF"],["Parque Nacional Traslasierra","TRA"],["Monumento Natural Bosques Petrificados","MBP"],["Reserva Natural Otamendi","OTA"],["Otra área protegida (escribir)","OTR"]];
+const PROVINCIAS=["Buenos Aires","CABA","Catamarca","Chaco","Chubut","Córdoba","Corrientes","Entre Ríos","Formosa","Jujuy","La Pampa","La Rioja","Mendoza","Misiones","Neuquén","Río Negro","Salta","San Juan","San Luis","Santa Cruz","Santa Fe","Santiago del Estero","Tierra del Fuego","Tucumán","Extranjero"];
+const CALIDADES=["Propietario/a","Poseedor/a","Ocupante","Encargado/a","Responsable","Representante legal","Empleado/a","Denunciante","Visitante","Prestador/a de servicios"];
+const MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+
+/* ============ Almacenamiento (IndexedDB con respaldo en memoria) ============ */
+const mem={actas:new Map(),kv:new Map()};
+let dbp=null;
+function openDB(){ if(dbp) return dbp; dbp=new Promise(res=>{ try{ const r=indexedDB.open("actas-apn",1); r.onupgradeneeded=()=>{const d=r.result; d.createObjectStore("actas",{keyPath:"id"}); d.createObjectStore("kv");}; r.onsuccess=()=>res(r.result); r.onerror=()=>res(null); r.onblocked=()=>res(null);}catch(e){res(null)} }); return dbp; }
+async function tx(st,mode,fn){ const d=await openDB(); if(!d) return fn(null); return new Promise(res=>{ try{ const t=d.transaction(st,mode); const s=t.objectStore(st); const out=fn(s); t.oncomplete=()=>res((typeof IDBRequest!=="undefined"&&out instanceof IDBRequest)?out.result:out); t.onerror=()=>res(null);}catch(e){res(fn(null))} }); }
+const store={
+  all:()=>tx("actas","readonly",s=>s?s.getAll():[...mem.actas.values()]),
+  put:a=>tx("actas","readwrite",s=>{ mem.actas.set(a.id,a); return s?s.put(a):null; }),
+  del:id=>tx("actas","readwrite",s=>{ mem.actas.delete(id); return s?s.delete(id):null; }),
+  get:k=>tx("kv","readonly",s=>s?s.get(k):mem.kv.get(k)),
+  set:(k,v)=>tx("kv","readwrite",s=>{ mem.kv.set(k,v); return s?s.put(v,k):null; })
+};
+
+/* ============ Utilidades ============ */
+const S={actas:[],perfil:null,view:"inicio",filtro:"todas",cur:null,step:0,busca:""};
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const pad=(n,l=2)=>String(n).padStart(l,"0");
+const norm=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+function nowParts(){const d=new Date();return{fecha:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`,hora:`${pad(d.getHours())}:${pad(d.getMinutes())}`}}
+function getPath(o,p){return p.split(".").reduce((a,k)=>a==null?a:a[k],o)}
+function setPath(o,p,v){const ks=p.split(".");let a=o;ks.slice(0,-1).forEach(k=>{if(a[k]==null)a[k]={};a=a[k]});a[ks.at(-1)]=v}
+function areaNombre(a){return a.area&&a.area.startsWith("Otra")?a.areaOtra:a.area}
+function areaCat(a){const n=areaNombre(a)||""; return /^Parque/i.test(n)?"PN":/^Monumento/i.test(n)?"MN":/^Reserva Natural Estricta/i.test(n)?"RNE":/^Reserva/i.test(n)?"RN":""}
+function fechaNum(f){return f?f.split("-").reverse().join("/"):"__/__/____"}
+function nombreInfr(a){const i=a.infractor||{}; if(i.esEmpresa) return i.razonSocial||"Sin identificar"; const n=[i.apellido,i.nombre].filter(Boolean).join(", "); return n||"Sin identificar";}
+function nombrePersona(p){return [p.apellido,p.nombre].filter(Boolean).join(", ")}
+const isInfr=a=>a.tipo==="infraccion";
+
+function nuevaActa(tipo){
+  const p=S.perfil||{}; const n=nowParts();
+  return {id:uid(),v:2,tipo,estado:"borrador",numero:"",creada:Date.now(),editada:Date.now(),
+    area:p.area||"",areaOtra:p.areaOtra||"",lugarActa:p.lugarActa||p.seccional||"",paraje:"",fecha:n.fecha,hora:n.hora,lat:"",lon:"",prec:"",
+    infractor:{docTipo:"DNI",acredita:"documento",provincia:""},vehiculo:{},personas:[],rubros:[],hechos:"",normativa:"",normativaManual:false,
+    ganado:{},secuestros:[],fotos:[],testigos:[{},{}],observaciones:"",firmas:{},negoFirma:false,motivoNoFirma:"",
+    guardaparque:{nombre:p.nombre||"",legajo:p.legajo||"",cargo:p.cargo||"Guardaparque Nacional"}};
+}
+
+/* ============ Ejemplos ============ */
+function ejemplos(){
+  const a=nuevaActa("infraccion");
+  Object.assign(a,{id:"ej3",ejemplo:true,estado:"cerrada",numero:"2026-041",area:"Parque Nacional Nahuel Huapi",lugarActa:"Seccional Lago Gutiérrez",paraje:"Playa norte del lago Gutiérrez",fecha:"2026-11-02",hora:"16:40",lat:"-41.16752",lon:"-71.40981",prec:"8",
+    infractor:{apellido:"EJEMPLO",nombre:"Juan Pedro",acredita:"documento",docTipo:"DNI",docNum:"30.000.000",cuit:"20-30000000-1",calle:"Calle Falsa 123",localidad:"San Carlos de Bariloche",provincia:"Río Negro",domConstituido:"Calle Falsa 123, San Carlos de Bariloche",tadCuit:"20-30000000-1"},
+    rubros:["for1"],hechos:"fuego encendido en un sitio no habilitado, sobre la costa del lago, con leña recolectada en el lugar; se procedió a su extinción con agua",
+    normativa:"el Art. 89° de la Res. HD N° 11/1994 (Reglamento Forestal para los MN, PN y RN de la Región Andino-Patagónica)",secuestros:[{desc:"Parrilla metálica portátil",cant:"1"}],
+    testigos:[{nombre:"EJEMPLO, María Laura",doc:"DNI 31.000.000"},{}],
+    guardaparque:{nombre:"EJEMPLO, Guardaparque",legajo:"0000",cargo:"Guardaparque Nacional"},cerrada:Date.parse("2026-11-02T17:05:00-03:00"),hash:"ejemplo-sin-validez"});
+  const b=nuevaActa("constatacion");
+  Object.assign(b,{id:"ej4",ejemplo:true,estado:"borrador",area:"Parque Nacional Copo",lugarActa:"Picada perimetral norte, km 4",paraje:"Picada perimetral norte, km 4",fecha:"2026-11-04",hora:"09:15",
+    personas:[{apellido:"EJEMPLO",nombre:"Ramón",docTipo:"DNI",docNum:"25.000.000",calidad:"Encargado/a"}],
+    rubros:["gan0"],hechos:"se observan siete (7) cabezas de ganado bovino pastando dentro de la jurisdicción del área protegida, conforme el cuadro de hacienda que se adjunta, y un tramo de seis (6) metros de alambrado perimetral cortado.",
+    ganado:{cant:"7",clase:"Mayor (bovino)",machos:"2",hembras:"5",adultos:"6",menores:"1",raza:"Criolla",color:"Colorado y overo",caravanas:"Sí, 3 animales",marca:"Marca a fuego visible en paleta izquierda"},
+    guardaparque:{nombre:"EJEMPLO, Guardaparque",legajo:"0000",cargo:"Guardaparque Nacional"}});
+  return [a,b];
+}
+
+/* ============ Render principal ============ */
+function render(keep){
+  const y=window.scrollY; const v=$("#view");
+  if(S.view==="inicio") v.innerHTML=vInicio(), bar(null);
+  else if(S.view==="perfil") v.innerHTML=vPerfil(), bar("perfil"), afterPerfil();
+  else if(S.view==="editor") v.innerHTML=vEditor(), bar("editor"), afterEditor();
+  else if(S.view==="ver") v.innerHTML=vVer(), bar("ver");
+  $("#topBtn").textContent=S.view==="inicio"?"Mis datos":"Inicio";
+  const sub=S.cur?(isInfr(S.cur)?"Acta de infracción":"Acta de constatación"):"Administración de Parques Nacionales";
+  $("#topTitle").firstChild.nodeValue=S.view==="editor"||S.view==="ver"?(S.cur.numero?"Acta N° "+S.cur.numero:"Borrador"):S.view==="perfil"?"Mis datos":"Actas Guardaparques";
+  $("#topSub").textContent=S.view==="perfil"?"Guardaparque actuante":sub;
+  window.scrollTo(0,keep?y:0);
+}
+function go(view){ if(view!=="editor"&&view!=="ver") S.cur=null; S.view=view; render(); }
+
+function vInicio(){
+  const p=S.perfil; let h=`<div class="stack">`;
+  if(!p||!p.nombre||!p.area) h+=`<div class="notice"><b>Completá tus datos antes de labrar actas.</b> Nombre, legajo y área protegida se cargan solos en cada acta nueva. <button class="btn sm" type="button" data-act="perfil" style="margin-top:8px">Cargar mis datos</button></div>`;
+  h+=`<div class="newbar">
+   <button class="newcard infr" type="button" data-new="infraccion"><strong>Acta de infracción</strong><span>Hay un presunto infractor identificado. Se lo notifica en el acto y puede firmar.</span></button>
+   <button class="newcard const" type="button" data-new="constatacion"><strong>Acta de constatación</strong><span>Dejar constancia de un hecho: daño, ganado, hallazgo, con o sin personas presentes.</span></button></div>`;
+  const L=S.actas.slice().sort((a,b)=>b.editada-a.editada);
+  const f=S.filtro; const vis=L.filter(a=>f==="todas"||a.estado===f);
+  h+=`<div class="sectionhead"><h2>Mis actas</h2><div class="filters">${[["todas","Todas"],["borrador","Borradores"],["cerrada","Cerradas"]].map(([k,t])=>`<button type="button" class="chip" data-filtro="${k}" aria-pressed="${f===k}">${t}</button>`).join("")}</div></div>`;
+  h+=`<div class="tally"><span><b>${L.filter(a=>a.estado==="borrador").length}</b> en borrador</span><span><b>${L.filter(a=>a.estado==="cerrada").length}</b> cerradas</span><span><b>${L.filter(isInfr).length}</b> de infracción</span></div>`;
+  if(!vis.length) h+=`<div class="empty">No hay actas en esta vista. Empezá una con los botones de arriba.</div>`;
+  else h+=`<div class="list">${vis.map(a=>`<button type="button" class="item ${isInfr(a)?"infr":""}" data-open="${a.id}">
+     <span class="stripe"></span>
+     <span class="body"><span class="who">${esc(isInfr(a)?nombreInfr(a):(a.paraje||"Sin lugar"))}</span><span class="what">${esc(a.rubros.map(r=>ITEMS[r]?.t).filter(Boolean).join(" · ")||a.hechos||"Sin hechos cargados")}</span><span class="num">${esc(a.numero?"N° "+a.numero:"sin número")} · ${esc(fechaNum(a.fecha))} ${esc(a.hora)}</span></span>
+     <span class="meta"><span class="pill ${isInfr(a)?"infr":"const"}">${isInfr(a)?"Infracción":"Constatación"}</span>${a.ejemplo?`<span class="pill ejemplo">Ejemplo</span>`:`<span class="pill ${a.estado}">${a.estado==="cerrada"?"Cerrada":"Borrador"}</span>`}</span></button>`).join("")}</div>`;
+  if(L.some(a=>a.ejemplo)) h+=`<button class="btn ghost sm" type="button" data-act="borrarEjemplos" style="align-self:flex-start">Quitar actas de ejemplo</button>`;
+  h+=`<p class="hint">Las actas se guardan en este dispositivo y funcionan sin señal. Exportá las cerradas para elevarlas a la Intendencia.</p></div>`;
+  return h;
+}
+
+function opts(list,val,empty){return (empty!==undefined?`<option value="">${empty}</option>`:"")+list.map(x=>`<option ${x===val?"selected":""}>${esc(x)}</option>`).join("")}
+function fld(path,label,o={}){
+  const src=o.src||S.cur; const v=getPath(src,path)??""; const id=(o.pre||"")+path.replace(/\./g,"_");
+  const type=o.type||"text"; const ph=o.ph?`placeholder="${esc(o.ph)}"`:"";
+  const input=type==="textarea"?`<textarea id="${id}" data-f="${path}" ${ph}>${esc(v)}</textarea>`
+   :type==="select"?`<select id="${id}" data-f="${path}">${opts(o.opts,v,o.empty)}</select>`
+   :`<input id="${id}" type="${type}" data-f="${path}" value="${esc(v)}" ${ph} ${o.im?`inputmode="${o.im}"`:""} ${o.list?`list="${o.list}"`:""} autocomplete="off">`;
+  return `<div class="field"><label for="${id}" class="${o.req?"req":""}">${label}</label>${input}${o.hint?`<span class="hint">${o.hint}</span>`:""}</div>`;
+}
+
+function vPerfil(){
+  const p=S.perfil; const o={src:p,pre:"p_"};
+  return `<div class="stack"><div class="panel"><h2>Funcionario actuante</h2><p class="lead">Estos datos se copian en cada acta nueva. Podés cambiarlos acta por acta.</p>
+   <div class="grid2">${fld("nombre","Apellido y nombre",{...o,req:true})}${fld("legajo","Legajo N°",{...o,req:true,im:"numeric"})}</div>
+   ${fld("cargo","Cargo / jerarquía",{...o,ph:"Guardaparque Nacional"})}
+   ${fld("area","Área protegida",{...o,type:"select",opts:AREAS.map(x=>x[0]),empty:"Elegir…",req:true})}
+   ${p.area&&p.area.startsWith("Otra")?fld("areaOtra","Nombre del área",o):""}
+   ${fld("lugarActa","Lugar habitual de confección",{...o,ph:"Ej.: Seccional Yacaré, Pampa del Indio",hint:"Va en «en … a los __/__/____» del acta de infracción."})}</div>
+  <div class="panel"><h2>Numeración</h2><p class="lead">Formato del talonario: año y correlativo, por ejemplo <span class="mono">2026-002</span>. Cada tipo de acta lleva su propia serie.</p>
+   <div class="grid3">${fld("proxInf","Próxima de infracción",{...o,type:"number",im:"numeric"})}${fld("proxConst","Próxima de constatación",{...o,type:"number",im:"numeric"})}${fld("prefijo","Prefijo (opcional)",{...o,ph:"Ej.: COP"})}</div></div>
+  <div class="panel"><h2>Encabezado del acta</h2><p class="lead">Cargá los logos oficiales tal como figuran en el talonario impreso. Quedan guardados en este dispositivo.</p>
+   ${fld("organismo","Línea superior del encabezado (opcional)",{...o,ph:"Ministerio del que depende la APN",hint:"Aparece en el acta de constatación sobre «Administración de Parques Nacionales»."})}
+   <div class="grid2">${logoField("logoApn","Logo de la APN")}${logoField("logoArea","Sello del área protegida")}</div></div></div>`;
+}
+function logoField(k,label){const v=S.perfil[k];return `<div class="field"><span class="lbl">${label}</span><div class="logoprev">${v?`<img src="${v}" alt="">`:`<span class="hint">Sin imagen</span>`}</div><div class="row"><label class="btn sm" for="in_${k}">${v?"Cambiar":"Cargar imagen"}</label><input id="in_${k}" type="file" accept="image/*" data-logo="${k}" hidden>${v?`<button class="btn sm ghost" type="button" data-dellogo="${k}">Quitar</button>`:""}</div></div>`}
+function afterPerfil(){document.querySelectorAll("[data-logo]").forEach(el=>el.onchange=async e=>{const f=e.target.files[0];if(!f)return;try{S.perfil[el.dataset.logo]=await shrink(f,360,.9,"image/png");save();render(true)}catch(x){toast("No se pudo leer la imagen.")}})}
+
+/* ============ Editor ============ */
+function pasos(a){ return isInfr(a)?["Lugar y fecha","Infractor","Hechos","Secuestro y fotos","Testigos","Firmas"]:["Lugar y fecha","Presentes","Se constata","Fotos","Testigos","Firmas"]; }
+function stepOk(a,i){ const inf=isInfr(a), I=a.infractor;
+  return [()=>!!(a.area&&a.paraje&&a.fecha&&a.hora&&(!inf||a.lugarActa)),
+          ()=>!inf||!!((I.esEmpresa?I.razonSocial:I.apellido)&&(I.docNum||I.cuit)),
+          ()=>a.hechos.trim().length>10&&(!inf||!!a.normativa.trim()),
+          ()=>true,()=>true,
+          ()=>!!a.firmaPapel||(!!a.firmas.guardaparque&&(!inf||!!(a.firmas.infractor||a.negoFirma)))][i](); }
+function vEditor(){
+  const a=S.cur, P=pasos(a);
+  return `<div class="stack"><nav class="steps" aria-label="Pasos del acta">${P.map((t,i)=>`<button type="button" class="step ${i!==S.step&&stepOk(a,i)?"done":""}" data-step="${i}" ${i===S.step?'aria-current="step"':""}><i>${i+1}</i>${t}</button>`).join("")}</nav>
+  ${[sLugar,isInfr(a)?sInfractor:sPresentes,sHechos,sSecuestro,sTestigos,sFirmas][S.step](a)}</div>`;
+}
+function sLugar(a){
+  const inf=isInfr(a);
+  return `<section class="panel"><h2>Lugar y fecha</h2><p class="lead">${inf?"«En … a los __/__/____ … en el paraje conocido como … jurisdicción del/la PN, RN, MN, RNE …»":"«A los … días del mes de … siendo las … horas, en … del …»"}</p>
+  ${fld("area","Área protegida (jurisdicción)",{type:"select",opts:AREAS.map(x=>x[0]),empty:"Elegir…",req:true})}
+  ${a.area.startsWith("Otra")?fld("areaOtra","Nombre del área",{req:true}):""}
+  ${inf?fld("lugarActa","Lugar de confección del acta",{req:true,ph:"Ej.: Seccional Yacaré"}):""}
+  ${fld("paraje",inf?"Paraje conocido como":"Lugar donde se constituye",{req:true,type:"textarea",ph:"Ej.: Picada al Carpincho, km 2, a 300 m del puesto de control"})}
+  <div class="gps"><span class="coords" id="coords">${a.lat?`${esc(a.lat)}, ${esc(a.lon)}${a.prec?` <span class="hint">± ${esc(a.prec)} m</span>`:""}`:"Sin coordenadas"}</span><button class="btn sm" type="button" data-act="gps">Tomar ubicación GPS</button></div>
+  <div class="grid2">${fld("lat","Latitud",{im:"decimal",ph:"-27.06000"})}${fld("lon","Longitud",{im:"decimal",ph:"-60.52000"})}</div>
+  <p class="hint">Las coordenadas van en el anexo del acta, sin alterar el texto del modelo oficial.</p>
+  <div class="grid2">${fld("fecha","Fecha",{type:"date",req:true})}${fld("hora","Hora",{type:"time",req:true})}</div></section>`;
+}
+function sInfractor(a){
+  const i=a.infractor;
+  return `<section class="panel"><h2>Persona infractora</h2><p class="lead">«…por parte de …, quien acredita su identidad mediante / dice ser titular de CUIT / CUIL N° …, con domicilio real en…»</p>
+  <label class="check"><input type="checkbox" id="esEmpresa" data-f="infractor.esEmpresa" ${i.esEmpresa?"checked":""}><span>Es una persona jurídica (empresa, prestador, estancia)</span></label>
+  ${i.esEmpresa?`<div class="grid2">${fld("infractor.razonSocial","Razón social",{req:true})}${fld("infractor.cuitEmpresa","CUIT de la empresa",{im:"numeric"})}</div><p class="hint">Abajo, los datos de quien la representa en el acto.</p>`:""}
+  <div class="grid2">${fld("infractor.apellido","Apellido",{req:!i.esEmpresa})}${fld("infractor.nombre","Nombres")}</div>
+  <div class="field"><span class="lbl">Identidad</span><div class="seg" role="radiogroup">
+   <label><input type="radio" name="acredita" data-f="infractor.acredita" value="documento" ${i.acredita!=="dice"?"checked":""}><span>Acredita con documento</span></label>
+   <label><input type="radio" name="acredita" data-f="infractor.acredita" value="dice" ${i.acredita==="dice"?"checked":""}><span>No lo presenta, dice ser titular</span></label></div></div>
+  <div class="grid3">${fld("infractor.docTipo","Documento",{type:"select",opts:["DNI","Pasaporte","Cédula","LE/LC","Otro"]})}${fld("infractor.docNum","Número",{req:true,im:"numeric"})}${fld("infractor.cuit","CUIT / CUIL N°",{im:"numeric",ph:"20-12345678-3"})}</div>
+  <div class="subpanel"><h3>Domicilio real</h3>${fld("infractor.calle","Calle y número")}<div class="grid2">${fld("infractor.localidad","Localidad")}${fld("infractor.provincia","Provincia",{type:"select",opts:PROVINCIAS,empty:"Elegir…"})}</div></div>
+  <div class="subpanel"><h3>Domicilio constituido</h3><p class="hint">Donde se tendrán por válidas las notificaciones (Ley N° 19.549, Dto. N° 1759/1972).</p>
+   <div class="row"><button class="btn sm ghost" type="button" data-act="copiarDom">Igual al domicilio real</button></div>
+   ${fld("infractor.domConstituido","Constituye domicilio en")}${fld("infractor.tadCuit","Trámites a Distancia (TAD): CUIT/CUIL",{im:"numeric",hint:"Si tiene cuenta en TAD, para recibir notificaciones electrónicas."})}</div>
+  <div class="grid2">${fld("infractor.telefono","Teléfono",{type:"tel"})}${fld("infractor.email","Correo electrónico",{type:"email"})}</div>
+  <div class="subpanel"><h3>Vehículo (si corresponde)</h3><div class="grid2">${fld("vehiculo.dominio","Dominio / matrícula")}${fld("vehiculo.tipo","Tipo",{ph:"Auto, camioneta, lancha…"})}</div><div class="grid2">${fld("vehiculo.marca","Marca y modelo")}${fld("vehiculo.color","Color")}</div></div></section>`;
+}
+function sPresentes(a){
+  return `<section class="panel"><h2>Personas presentes</h2><p class="lead">«Se encuentra/n presente/s en el acto el/los señor/es … quien/es acredita/n identidad mediante presentación de … N°/s … en calidad de …»</p>
+  <datalist id="calidades">${CALIDADES.map(c=>`<option value="${esc(c)}">`).join("")}</datalist>
+  ${a.personas.length?a.personas.map((p,k)=>`<div class="subpanel"><div class="row"><h3 class="grow">Persona ${k+1}</h3><button class="btn sm danger" type="button" data-delper="${k}">Quitar</button></div>
+   <div class="grid2">${fld(`personas.${k}.apellido`,"Apellido")}${fld(`personas.${k}.nombre`,"Nombres")}</div>
+   <div class="grid3">${fld(`personas.${k}.docTipo`,"Documento",{type:"select",opts:["DNI","Pasaporte","Cédula","LE/LC","Otro"]})}${fld(`personas.${k}.docNum`,"Número",{im:"numeric"})}${fld(`personas.${k}.calidad`,"En calidad de",{list:"calidades"})}</div></div>`).join("")
+   :`<p class="hint">Sin personas presentes. El acta dirá que no se encuentran personas en el acto.</p>`}
+  <button class="btn sm" type="button" data-act="addper" style="align-self:flex-start">Agregar persona presente</button></section>`;
+}
+function sHechos(a){
+  const inf=isInfr(a); const g=a.rubros.includes("gan0");
+  return `<section class="panel"><h2>${inf?"Hechos comprobados":"Se CONSTATA que"}</h2>
+  <p class="lead">${inf?"Elegí la conducta del listado oficial: la normativa infringida se arma sola con reglamento y artículo.":"Si el hecho encuadra en un reglamento, marcalo para dejar referencia. Es opcional."}</p>
+  ${a.rubros.length?`<div class="selitems">${a.rubros.map(id=>ITEMS[id]?`<button type="button" class="selitem" data-rubro="${id}" aria-label="Quitar"><b>${esc(ITEMS[id].art||"—")}</b> ${esc(ITEMS[id].t)} <span aria-hidden="true">×</span></button>`:"").join("")}</div>`:""}
+  <div class="field"><label for="buscaInf">Buscar en el listado de infracciones frecuentes</label><input id="buscaInf" type="search" value="${esc(S.busca)}" placeholder="Ej.: fuego, perro, dron, pesca, áridos" autocomplete="off"></div>
+  <div id="catalogo" class="cat">${catalogo(a)}</div>
+  ${fld("hechos",inf?"En virtud de haber comprobado:":"Se CONSTATA que:",{type:"textarea",req:true,hint:inf?"Completá la oración: qué hizo, con qué elementos, cantidades y estado. Al elegir una conducta se agrega como punto de partida.":"Describí lo observado en orden: situación, elementos, cantidades, daños, medidas tomadas."})}
+  ${g?`<div class="subpanel"><h3>Cuadro de hacienda</h3><p class="hint">Datos que pide la Res. APN 467/2017. Van al pie del acta.</p>
+    <div class="grid3">${fld("ganado.cant","Cantidad total",{im:"numeric"})}${fld("ganado.clase","Clase",{type:"select",opts:["","Mayor (bovino)","Mayor (equino)","Menor (caprino)","Menor (ovino)","Menor (porcino)","Mixto"]})}${fld("ganado.raza","Raza o biotipo")}</div>
+    <div class="grid3">${fld("ganado.machos","Machos",{im:"numeric"})}${fld("ganado.hembras","Hembras",{im:"numeric"})}${fld("ganado.color","Pelaje / color")}</div>
+    <div class="grid3">${fld("ganado.adultos","Adultos",{im:"numeric"})}${fld("ganado.menores","Menores",{im:"numeric"})}${fld("ganado.caravanas","Caravanas")}</div>
+    ${fld("ganado.marca","Marca o señal (describirla; si podés, fotografiala)")}</div>`:""}
+  ${inf?fld("normativa","Contraviniendo lo prescripto en:",{type:"textarea",req:true,hint:"Se completa sola con las conductas elegidas. Podés editarla."}):""}
+  ${fld("observaciones",inf?"Manifestación del infractor u observaciones (opcional)":"Observaciones (opcional)",{type:"textarea",hint:"Van en el anexo, fuera del texto oficial."})}
+  </section>`;
+}
+function catalogo(a){
+  const q=norm(S.busca).trim(); let out="";
+  REGS.forEach(g=>{
+    const its=g.it.map((x,k)=>ITEMS[g.id+k]).filter(it=>!q||norm(it.t+" "+it.art+" "+g.n+" "+g.r).includes(q));
+    if(!its.length) return;
+    const nSel=its.filter(it=>a.rubros.includes(it.id)).length;
+    out+=`<details ${q||nSel?"open":""}><summary><span class="grow"><b>${esc(g.n)}</b><span class="res">${esc(g.r)}${g.nota?" · "+esc(g.nota):""}</span></span>${nSel?`<span class="pill cerrada">${nSel}</span>`:""}</summary>
+     <div class="catitems">${its.map(it=>`<button type="button" class="catitem" data-rubro="${it.id}" aria-pressed="${a.rubros.includes(it.id)}"><span>${esc(it.t)}</span><span class="art">${esc(it.art||"s/art.")}</span></button>`).join("")}</div></details>`;
+  });
+  return out||`<p class="hint">Nada coincide con «${esc(S.busca)}». Describí la conducta y la normativa a mano.</p>`;
+}
+function sSecuestro(a){
+  const inf=isInfr(a);
+  return `<section class="panel"><h2>${inf?"Secuestro y fotos":"Fotografías"}</h2><p class="lead">${inf?"«Se procede al secuestro de los elementos utilizados en la infracción, y/o sus frutos, consistentes en…»":"Registro fotográfico del lugar y de lo constatado. Va como anexo."}</p>
+  ${inf?`<div class="subpanel"><h3>Elementos secuestrados</h3><div class="lines">${a.secuestros.length?a.secuestros.map((s,k)=>`<div class="line">${fld(`secuestros.${k}.desc`,"Descripción",{ph:"Ej.: caña de pescar con reel"})}${fld(`secuestros.${k}.cant`,"Cant.",{im:"numeric"})}<button class="btn sm danger" type="button" data-delsec="${k}">Quitar</button></div>`).join(""):`<p class="hint">Sin elementos secuestrados.</p>`}</div>
+  <button class="btn sm" type="button" data-act="addsec" style="align-self:flex-start">Agregar elemento</button></div>`:""}
+  <div class="subpanel"><h3>Fotografías</h3>
+   ${a.fotos.length?`<div class="photos">${a.fotos.map((f,k)=>`<figure class="photo" style="margin:0"><img src="${f.src}" alt="Foto ${k+1}"><input type="text" id="foto_${k}" data-f="fotos.${k}.nota" value="${esc(f.nota||"")}" placeholder="Foto ${k+1}: qué muestra"><button type="button" data-delfoto="${k}" aria-label="Quitar foto">×</button></figure>`).join("")}</div>`:`<p class="hint">Todavía no hay fotos.</p>`}
+   <div class="row"><label class="btn sm" for="camIn">Sacar foto</label><input id="camIn" type="file" accept="image/*" capture="environment" hidden><label class="btn sm ghost" for="galIn">Elegir de la galería</label><input id="galIn" type="file" accept="image/*" multiple hidden></div></div></section>`;
+}
+function sTestigos(a){
+  return `<section class="panel"><h2>Testigos</h2><p class="lead">El modelo prevé firma, aclaración y documento del testigo. Recomendado siempre, y en especial si el infractor no firma.</p>
+  ${[0,1].map(k=>`<div class="subpanel"><h3>Testigo ${k+1}${k?" (opcional)":""}</h3><div class="grid2">${fld(`testigos.${k}.nombre`,"Aclaración (apellido y nombre)")}${fld(`testigos.${k}.doc`,"Doc. Ident. N°",{im:"numeric"})}</div></div>`).join("")}</section>`;
+}
+function sFirmas(a){
+  const inf=isInfr(a); const T=a.testigos.map((t,k)=>({t,k})).filter(x=>x.t.nombre);
+  const chk=[["Lugar y fecha",stepOk(a,0)],...(inf?[["Datos del infractor",stepOk(a,1)]]:[]),[inf?"Hechos y normativa":"Lo constatado",stepOk(a,2)],...(a.firmaPapel?[["Firmas sobre el papel impreso",true]]:[["Firma del funcionario actuante",!!a.firmas.guardaparque],...(inf?[["Firma del infractor o constancia de negativa",!!(a.firmas.infractor||a.negoFirma)]]:[])])];
+  return `<section class="panel"><h2>Lectura y firmas</h2><p class="lead">Mostrá el acta en pantalla o leela en voz alta antes de pedir firmas.</p>
+  <button class="btn" type="button" data-act="preview">Ver acta completa</button>
+  ${fld("guardaparque.nombre","Funcionario actuante",{req:true})}
+  <div class="grid2">${fld("guardaparque.legajo","Leg. N°")}${fld("guardaparque.cargo","Cargo")}</div>
+  <label class="check"><input type="checkbox" id="firmaPapel" data-f="firmaPapel" ${a.firmaPapel?"checked":""}><span><b>Las firmas se toman sobre el acta impresa.</b> El acta se cierra sin firmas en pantalla y se imprime con los espacios en blanco.</span></label>
+  ${a.firmaPapel?"":sigBox("guardaparque","Firma del funcionario actuante")}
+  ${a.firmaPapel?"":inf?`<label class="check"><input type="checkbox" id="negoFirma" data-f="negoFirma" ${a.negoFirma?"checked":""}><span><b>La persona infractora se niega a firmar.</b> Queda constancia en el acta y corresponde sumario contravencional (art. 6°, Dto. 300/2022).</span></label>
+   ${a.negoFirma?fld("motivoNoFirma","Motivo expresado o circunstancias",{type:"textarea"}):sigBox("infractor","Firma de la persona infractora")}`:""}
+  ${a.firmaPapel?"":T.length?T.map(({t,k})=>sigBox("testigo"+k,"Firma del testigo: "+t.nombre)).join(""):`<p class="hint">Sin testigos cargados. Podés agregarlos en el paso 5.</p>`}
+  <div class="subpanel"><h3>Antes de cerrar</h3><ul class="checklist">${chk.map(([t,ok])=>`<li class="${ok?"ok":""}">${t}</li>`).join("")}</ul>
+  <p class="hint">Al cerrar, el acta recibe el número del talonario digital y un código de integridad. Ya no se puede modificar.</p></div></section>`;
+}
+function sigBox(key,label){const v=S.cur.firmas[key];return `<div class="sig"><span class="lbl">${esc(label)}</span><div class="sigbox ${v?"signed":""}" data-sig="${key}"><canvas></canvas><span class="base"></span><span class="ph">${v?"Firmado":"Firmar aquí"}</span></div><div class="row"><button type="button" class="btn sm ghost" data-clearsig="${key}">Borrar firma</button></div></div>`}
+function afterEditor(){
+  document.querySelectorAll(".sigbox").forEach(initSig);
+  ["camIn","galIn"].forEach(id=>{const el=document.getElementById(id); if(el) el.onchange=e=>addFotos(e.target.files);});
+  const b=$("#buscaInf"); if(b) b.oninput=()=>{S.busca=b.value; $("#catalogo").innerHTML=catalogo(S.cur);};
+}
+
+/* ============ Firma ============ */
+function initSig(box){
+  const key=box.dataset.sig, c=box.querySelector("canvas"), dpr=Math.max(1,window.devicePixelRatio||1);
+  const r=box.getBoundingClientRect(); c.width=r.width*dpr; c.height=r.height*dpr; const x=c.getContext("2d");
+  x.scale(dpr,dpr); x.lineWidth=2.4; x.lineCap="round"; x.lineJoin="round"; x.strokeStyle="#10203A";
+  const prev=S.cur.firmas[key]; if(prev){const im=new Image(); im.onload=()=>x.drawImage(im,0,0,r.width,r.height); im.src=prev;}
+  let dn=false,last=null,drawn=false;
+  const pt=e=>{const b=c.getBoundingClientRect();return[e.clientX-b.left,e.clientY-b.top]};
+  c.onpointerdown=e=>{dn=true;last=pt(e);c.setPointerCapture(e.pointerId);e.preventDefault()};
+  c.onpointermove=e=>{if(!dn)return;const p=pt(e);x.beginPath();x.moveTo(...last);x.lineTo(...p);x.stroke();last=p;drawn=true};
+  const up=()=>{if(!dn)return;dn=false;if(drawn){S.cur.firmas[key]=c.toDataURL("image/png");save();render(true)}};
+  c.onpointerup=up;c.onpointercancel=up;c.onpointerleave=up;
+}
+
+/* ============ Fotos e imágenes ============ */
+async function addFotos(files){
+  for(const f of [...files]){ try{ const src=await shrink(f,1280,.72); S.cur.fotos.push({id:uid(),src,nota:"",t:new Date().toISOString()}); }catch(e){toast("No se pudo leer una de las imágenes.")} }
+  save(); render(true);
+}
+function shrink(file,max,q,type="image/jpeg"){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{const s=Math.min(1,max/Math.max(im.width,im.height));const c=document.createElement("canvas");c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext("2d").drawImage(im,0,0,c.width,c.height);res(c.toDataURL(type,q))};im.src=fr.result};fr.readAsDataURL(file)})}
+
+/* ============ Conductas y normativa ============ */
+function normDesde(a){
+  const by=new Map(); a.rubros.filter(id=>ITEMS[id]).sort((x,y)=>Object.keys(ITEMS).indexOf(x)-Object.keys(ITEMS).indexOf(y)).forEach(id=>{const it=ITEMS[id]; if(!it) return; if(!by.has(it.g.id)) by.set(it.g.id,{g:it.g,arts:[]}); if(it.art) by.get(it.g.id).arts.push(it.art);});
+  return [...by.values()].map(({g,arts})=>{ const ar=arts.length?(arts.length>1?arts.slice(0,-1).join(", ")+" y "+arts.at(-1):arts[0]):""; return g.r.startsWith("Ley")?`${ar?"el "+ar+" de la ":"la "}${g.r}`:`${ar?"el "+ar+" de la ":"la "}${g.r} (${g.n})`; }).join("; ");
+}
+function toggleRubro(id){
+  const a=S.cur, on=a.rubros.includes(id), it=ITEMS[id];
+  if(on) a.rubros=a.rubros.filter(x=>x!==id);
+  else { a.rubros.push(id); const seed=it.t.charAt(0).toLowerCase()+it.t.slice(1).replace(/\s*\(.*\)$/,""); if(!a.hechos.includes(seed)) a.hechos=a.hechos.trim()?a.hechos.trim().replace(/[.;,]$/,"")+"; "+seed:seed; }
+  if(!a.normativaManual) a.normativa=normDesde(a);
+  save(); render(true);
+}
+
+/* ============ Documento (texto de los modelos oficiales) ============ */
+const V=(x,fb="……………")=>`<span class="v">${x?esc(x):fb}</span>`;
+function encabezado(a){
+  const p=S.perfil||{}; const inf=isInfr(a);
+  const L=inf?p.logoApn:p.logoArea, R=inf?p.logoArea:p.logoApn;
+  const lg=(src,alt)=>src?`<img src="${src}" alt="${alt}">`:`<span class="logoph">${alt}</span>`;
+  return `<div class="dlogos">${lg(L,inf?"Logo APN":"Sello del área")}<div class="dinst">${inf?"":`${p.organismo?`<i>${esc(p.organismo)}</i><br>`:""}<i>Administración de Parques Nacionales</i><br>Ley N° 22.351`}</div>${lg(R,inf?"Sello del área":"Logo APN")}</div>`;
+}
+function docHTML(a,copia="ORIGINAL",opt={anexo:true,fotos:true}){
+  const inf=isInfr(a); const ar=areaNombre(a)||"";
+  let h=`<article class="doc">${a.ejemplo?`<span class="ejemplo">EJEMPLO · SIN VALIDEZ</span>`:""}${encabezado(a)}`;
+  if(inf){
+    const i=a.infractor, sec=a.secuestros.filter(s=>s.desc);
+    const quien=i.esEmpresa?`${esc(i.razonSocial||"……")}${i.cuitEmpresa?`, CUIT N° ${esc(i.cuitEmpresa)}`:""}, representada en el acto por ${V(nombrePersona(i))}`:V(nombrePersona(i));
+    const ident=`${i.acredita==="dice"?"quien dice ser titular de":"quien acredita su identidad mediante"} ${esc(i.docTipo||"DNI")} N° ${V(i.docNum)}${i.cuit?`, CUIT / CUIL N° ${V(i.cuit)}`:""}`;
+    h+=`<div class="dorig"><span>${esc(copia)}</span><span>Acta N° ${esc(a.numero||"BORRADOR")}</span></div>
+    <h3 class="dtitle">ACTA DE INFRACCIÓN</h3>
+    <p>En los términos del <b>Decreto N° 300/2022</b> del Poder Ejecutivo Nacional reglamentario de la <b>Ley N° 22.351</b>, en ${V(a.lugarActa)} a los ${V(fechaNum(a.fecha))}, procedo a la confección de la presente ACTA DE INFRACCIÓN en virtud de haber comprobado: ${V(a.hechos)} en el paraje conocido como ${V(a.paraje)}, jurisdicción ${/^(Reserva|Otra)/i.test(ar)?"de la":"del"} ${V(ar,"PN, RN, MN, RNE ……………")}, contraviniendo lo prescripto en ${V(a.normativa)}, por parte de ${quien}, ${ident}, con domicilio real en la calle ${V(i.calle)} de la localidad de ${V(i.localidad)}, provincia de ${V(i.provincia)}.</p>
+    <p>En este acto también se procede al secuestro de los elementos utilizados en la infracción, y/o sus frutos, consistentes en: ${sec.length?V(sec.map(s=>`${s.cant||1} ${s.desc}`).join("; ")):V("","no se secuestran elementos")} que permanecerán en tal condición hasta que se cumplimente el pago de la multa, cuando se procederá a su devolución, siempre que no corresponda hacer efectiva la sanción de decomiso, conforme el Artículo 29 de la Ley N° 22.351 de Parques Nacionales.---</p>
+    <p>La persona infractora ${V(nombreInfr(a))} constituye domicilio en ${V(i.domConstituido)} y/o en la plataforma electrónica de “TRÁMITES A DISTANCIA” CUIT/CUIL ${V(i.tadCuit)} a todos los efectos de las actuaciones que se originen con motivo de la presente y donde se tendrán por válidas todas las notificaciones legalmente realizadas (cfr. Ley N° 19.549, Decreto N° 1759/1972 y concordantes). ---</p>
+    <p>Se hace saber que podrá presentar descargo en el término de CINCO (5) días hábiles y que la infracción es pasible de ser sancionada de acuerdo a los Artículos 28 y 29 de la Ley N° 22.351, mediante acto administrativo.----</p>
+    <div class="firmas f3">
+     ${firma(a.firmas.infractor,"INFRACTOR",nombreInfr(a),a.negoFirma?"Se negó a firmar":null)}
+     ${firma(a.firmas.testigo0,"TESTIGO",a.testigos[0]?.nombre?`${a.testigos[0].nombre}${a.testigos[0].doc?" · Doc. "+a.testigos[0].doc:""}`:"")}
+     ${firma(a.firmas.guardaparque,"FUNCIONARIO ACTUANTE",`${a.guardaparque.nombre||""}${a.guardaparque.legajo?" · Leg. N° "+a.guardaparque.legajo:""}`)}
+    </div>${a.testigos[1]?.nombre?`<div class="firmas f3">${firma(a.firmas.testigo1,"TESTIGO",`${a.testigos[1].nombre}${a.testigos[1].doc?" · Doc. "+a.testigos[1].doc:""}`)}</div>`:""}`;
+  } else {
+    const [y,m,d]=(a.fecha||"--").split("-");
+    const P=a.personas.filter(p=>nombrePersona(p));
+    const pres=P.length?`Se encuentra${P.length>1?"n presentes":" presente"} en el acto ${P.length>1?"los señores":"el/la señor/a"} ${V(P.map(nombrePersona).join("; "))} quien${P.length>1?"es acreditan":" acredita"} identidad mediante presentación de ${V([...new Set(P.map(p=>p.docTipo||"DNI"))].join("/"))} N°/s ${V(P.map(p=>p.docNum).filter(Boolean).join("; "))} en calidad de ${V(P.map(p=>p.calidad).filter(Boolean).join("; "))}.`
+      :`No se encuentran personas presentes en el acto.`;
+    h+=`<div class="dorig"><span>${esc(copia)}</span></div><div class="dorig dconst"><h3 class="dtitle u">ACTA DE CONSTATACIÓN</h3><span>N°: ${V(a.numero,"______")}</span></div>
+    <p>A los ${V(d?String(Number(d)):"")} días del mes de ${V(m?MESES[Number(m)-1]:"")} del año ${V(y)} siendo las ${V(a.hora)} horas, en ${V(a.paraje)} del ${V(ar)}, se constituye el funcionario que suscribe ${V(a.guardaparque.nombre)} Leg. N° ${V(a.guardaparque.legajo)} con el objeto de proceder a constatar los hechos que más abajo se detallan.-</p>
+    <p class="ind">${pres}</p>
+    <p class="ind">Se CONSTATA que: ${V(a.hechos)}</p>
+    <p class="ind">En el lugar y fecha indicados al comienzo, se firma la presente en DOS (2) ejemplares constituidos por el original para el funcionario actuante y UNA (1) copia, en caso de ser necesario para los testigos.</p>
+    <div class="firmas f2">
+     ${a.testigos.map((t,k)=>t.nombre?firma(a.firmas["testigo"+k],"TESTIGO",`Aclaración: ${t.nombre}<br>Doc. Ident. N° ${t.doc||"……"}`,null,true):"").join("")||firma(null,"TESTIGO","Aclaración: ……<br>Doc. Ident. N° ……",null,true)}
+     ${firma(a.firmas.guardaparque,"FUNCIONARIO ACTUANTE",`${a.guardaparque.nombre||""}${a.guardaparque.legajo?" · Leg. N° "+a.guardaparque.legajo:""}`)}
+    </div>`;
+  }
+  if(opt.anexo) h+=anexo(a,opt);
+  h+=a.estado==="cerrada"?`<div class="integridad">Cerrada el ${new Date(a.cerrada).toLocaleString("es-AR")} · Código de integridad SHA-256: ${esc(a.hash)}</div>`:`<div class="integridad">BORRADOR · sin número ni código de integridad</div>`;
+  return h+`</article>`;
+}
+function anexo(a,opt={fotos:true}){
+  const inf=isInfr(a), G=a.ganado||{}, v=a.vehiculo||{}, i=a.infractor||{};
+  const rows=[];
+  rows.push(["Hora",a.hora?a.hora+" h":""]);
+  if(a.lat&&a.lon) rows.push(["Coordenadas (WGS84)",`${a.lat}, ${a.lon}${a.prec?` (± ${a.prec} m)`:""}`]);
+  if(inf&&(i.telefono||i.email)) rows.push(["Contacto del infractor",[i.telefono,i.email].filter(Boolean).join(" · ")]);
+  if(v.dominio||v.marca||v.tipo) rows.push(["Vehículo",[v.tipo,v.marca,v.color,v.dominio&&"dominio "+v.dominio].filter(Boolean).join(", ")]);
+  if(a.rubros.length) rows.push(["Conductas (listado APN)",a.rubros.map(id=>ITEMS[id]?`${ITEMS[id].art} ${ITEMS[id].g.r}: ${ITEMS[id].t}`:"").filter(Boolean).join(" | ")]);
+  if(!inf&&a.normativa) rows.push(["Normativa relacionada",a.normativa]);
+  if(a.firmaPapel) rows.push(["Firmas","Tomadas de puño y letra sobre el acta impresa."]);
+  if(inf&&a.negoFirma&&!a.firmaPapel) rows.push(["Negativa a firmar",`La persona infractora se negó a suscribir la presente${a.motivoNoFirma?`. Manifestó: «${a.motivoNoFirma}»`:""}. Corresponde sumario contravencional (art. 6°, Dto. 300/2022).`]);
+  if(a.observaciones) rows.push([inf?"Manifestación / observaciones":"Observaciones",a.observaciones]);
+  const gan=a.rubros.includes("gan0")?`<table><tr><th>Cantidad</th><th>Clase</th><th>Machos / hembras</th><th>Adultos / menores</th><th>Raza</th><th>Pelaje</th><th>Caravanas</th></tr><tr><td>${esc(G.cant)}</td><td>${esc(G.clase)}</td><td>${esc(G.machos||"-")} / ${esc(G.hembras||"-")}</td><td>${esc(G.adultos||"-")} / ${esc(G.menores||"-")}</td><td>${esc(G.raza)}</td><td>${esc(G.color)}</td><td>${esc(G.caravanas)}</td></tr></table>${G.marca?`<p>Marca o señal: ${esc(G.marca)}.</p>`:""}`:"";
+  return `<section class="danexo"><h4>Anexo digital del acta${a.numero?" N° "+esc(a.numero):""}</h4><p class="hint2">Datos registrados en el procedimiento que complementan el texto del modelo oficial.</p>
+   <table>${rows.filter(r=>r[1]).map(r=>`<tr><th>${esc(r[0])}</th><td>${esc(r[1])}</td></tr>`).join("")}</table>
+   ${gan?`<h5>Cuadro de hacienda (Res. APN 467/2017)</h5>${gan}`:""}
+   ${a.fotos.length&&!opt.fotos?`<p>Registro fotográfico: ${a.fotos.length} foto/s en el acta digital.</p>`:""}${a.fotos.length&&opt.fotos?`<h5>Registro fotográfico</h5><div class="dphotos">${a.fotos.map((f,k)=>`<figure><img src="${f.src}" alt=""><figcaption>${k+1}. ${esc(f.nota||"")}</figcaption></figure>`).join("")}</div>`:""}</section>`;
+}
+function firma(src,rol,acl,no,below){return `<div class="firma">${no?`<div class="nofirma">${no}</div>`:src?`<img src="${src}" alt="Firma">`:`<div class="nofirma muted">&nbsp;</div>`}<div class="l">${below?`<b>${rol}</b><span class="acl">${acl}</span>`:`<span class="acl">${esc(acl||"")}</span><b>${rol}</b>`}</div></div>`}
+function vVer(){
+  const a=S.cur;
+  return `<div class="stack">${a.estado==="cerrada"?"":`<div class="notice noprint"><b>Vista previa.</b> El acta sigue abierta. Volvé a editar para cerrarla.</div>`}<div class="docwrap">${docHTML(a)}</div></div>`;
+}
+
+/* ============ Barra de acciones ============ */
+function bar(mode){
+  const ab=$("#actionbar"), ac=$("#actions"); if(!mode){ab.hidden=true;return} ab.hidden=false;
+  if(mode==="perfil") ac.innerHTML=`<span class="saved">Se guarda solo.</span><button class="btn primary" type="button" data-act="inicio">Listo</button>`;
+  if(mode==="editor"){ const last=S.step===pasos(S.cur).length-1;
+    ac.innerHTML=`<button class="btn" type="button" data-act="prev" ${S.step===0?"disabled":""}>Atrás</button><span class="saved" id="savedLbl">Borrador guardado</span>${last?`<button class="btn primary" type="button" data-act="cerrar">Cerrar acta</button>`:`<button class="btn primary" type="button" data-act="next">Siguiente</button>`}`; }
+  if(mode==="ver"){ const cerr=S.cur.estado==="cerrada"; const iframe=window.self!==window.top;
+    ac.innerHTML=cerr?`<button class="btn" type="button" data-act="share">Compartir</button>${iframe?"":`<button class="btn" type="button" data-act="export">Exportar</button>`}<button class="btn primary grow" type="button" data-act="print">Imprimir</button>`
+      :`<button class="btn" type="button" data-act="volver">Seguir editando</button><span class="saved"></span>${S.cur.ejemplo?"":`<button class="btn danger" type="button" data-act="borrar">Descartar</button>`}`; }
+}
+
+/* ============ Guardado ============ */
+let saveT=null;
+function save(){
+  if(S.view==="perfil"){ clearTimeout(saveT); saveT=setTimeout(()=>store.set("perfil",S.perfil),250); return; }
+  if(!S.cur) return; S.cur.editada=Date.now();
+  if(!S.actas.includes(S.cur)) S.actas.push(S.cur);
+  const l=$("#savedLbl"); if(l) l.textContent="Guardando…";
+  clearTimeout(saveT); saveT=setTimeout(async()=>{ await store.put(JSON.parse(JSON.stringify(S.cur))); const l2=$("#savedLbl"); if(l2) l2.textContent="Borrador guardado "+new Date().toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"}); },300);
+}
+async function sha256(t){ try{ const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join(""); }catch(e){ let h=0; for(const c of t) h=(h*31+c.charCodeAt(0))|0; return "simple-"+(h>>>0).toString(16); } }
+function proxNumero(a){ const p=S.perfil||{}; const k=isInfr(a)?"proxInf":"proxConst"; const n=Number(p[k])||1; return {k,n,num:`${p.prefijo?p.prefijo.toUpperCase()+"-":""}${a.fecha.slice(0,4)}-${pad(n,3)}`}; }
+function cerrar(){
+  const a=S.cur; const bad=pasos(a).map((t,i)=>[t,stepOk(a,i)]).filter(x=>!x[1]);
+  if(bad.length){ toast("Falta completar: "+bad.map(x=>x[0]).join(", ")+"."); return; }
+  modal(`<h3>¿Cerrar el acta N° ${esc(proxNumero(a).num)}?</h3><p>Se le asigna ese número y ya no se puede modificar. Revisá que los datos estén bien.</p><div class="row"><button class="btn grow" type="button" data-act="modalno">Revisar</button><button class="btn primary grow" type="button" data-act="cerrarok">Cerrar y numerar</button></div>`);
+}
+async function cerrarOk(){
+  closeModal(); const a=S.cur; const {k,n,num}=proxNumero(a);
+  a.numero=num; a.estado="cerrada"; a.cerrada=Date.now();
+  const {hash,...rest}=a; a.hash=await sha256(JSON.stringify(rest));
+  S.perfil={...(S.perfil||{}),[k]:n+1}; await store.set("perfil",S.perfil);
+  await store.put(JSON.parse(JSON.stringify(a))); S.view="ver"; render(); openPrint();
+}
+
+/* ============ Exportar / compartir ============ */
+function resumen(a){ const inf=isInfr(a); return `${inf?"ACTA DE INFRACCIÓN":"ACTA DE CONSTATACIÓN"} N° ${a.numero}\n${areaNombre(a)}\n${fechaNum(a.fecha)} ${a.hora} · ${a.paraje}\n${inf?"Persona infractora: "+nombreInfr(a)+" ("+(a.infractor.docTipo||"")+" "+(a.infractor.docNum||"")+")\nContraviniendo: "+a.normativa+"\n":""}${inf?"Hechos":"Se constata que"}: ${a.hechos}\n${inf?"\nPodrá presentar descargo en el término de CINCO (5) días hábiles (Dto. 300/2022).\n":""}\nCódigo de integridad: ${a.hash}`; }
+async function compartir(){
+  const a=S.cur, txt=resumen(a);
+  try{ if(navigator.share){ await navigator.share({title:"Acta N° "+a.numero,text:txt}); return; } }catch(e){ if(e&&e.name==="AbortError") return; }
+  try{ await navigator.clipboard.writeText(txt); toast("Resumen copiado. Pegalo en un correo o mensaje."); }
+  catch(e){ modal(`<h3>Resumen del acta</h3><textarea id="resumenTxt" readonly style="min-height:240px">${esc(txt)}</textarea><button class="btn" type="button" data-act="modalno">Cerrar</button>`); const t=$("#resumenTxt"); t.focus(); t.select(); }
+}
+function exportar(){
+  try{ const blob=new Blob([JSON.stringify(S.cur,null,1)],{type:"application/json"}); const f=new File([blob],`acta-${S.cur.numero}.json`,{type:"application/json"});
+    if(navigator.canShare&&navigator.canShare({files:[f]})){ navigator.share({files:[f],title:"Acta N° "+S.cur.numero}).catch(()=>{}); return; }
+    const u=URL.createObjectURL(blob), l=document.createElement("a"); l.href=u; l.download=f.name; document.body.appendChild(l); l.click(); l.remove(); setTimeout(()=>URL.revokeObjectURL(u),2000);
+    toast("Archivo del acta generado.");
+  }catch(e){ toast("No se pudo exportar en este navegador."); }
+}
+
+/* ============ GPS ============ */
+function gps(){
+  const el=$("#coords"); if(!navigator.geolocation){ toast("Este dispositivo no ofrece ubicación. Cargá las coordenadas a mano."); return; }
+  el.textContent="Buscando señal…";
+  navigator.geolocation.getCurrentPosition(p=>{ const a=S.cur; a.lat=p.coords.latitude.toFixed(5); a.lon=p.coords.longitude.toFixed(5); a.prec=String(Math.round(p.coords.accuracy)); save(); render(true); toast("Ubicación tomada (± "+a.prec+" m)."); },
+    e=>{ el.textContent=S.cur.lat?`${S.cur.lat}, ${S.cur.lon}`:"Sin coordenadas"; toast(e.code===1?"Permiso de ubicación denegado. Habilitalo o cargá las coordenadas a mano.":"No se obtuvo señal GPS. Probá a cielo abierto o cargalas a mano."); },
+    {enableHighAccuracy:true,timeout:20000,maximumAge:30000});
+}
+
+/* ============ UI auxiliar ============ */
+let toastT; function toast(m){ let t=$(".toast"); if(!t){t=document.createElement("div");t.className="toast";t.setAttribute("role","status");document.body.appendChild(t)} t.textContent=m; clearTimeout(toastT); toastT=setTimeout(()=>t.remove(),3800); }
+function modal(h){ $("#modalRoot").innerHTML=`<div class="modal" role="dialog" aria-modal="true"><div class="box">${h}</div></div>`; }
+function closeModal(){ $("#modalRoot").innerHTML=""; }
+
+/* ============ Eventos ============ */
+const RERENDER=new Set(["area","infractor.esEmpresa","negoFirma","firmaPapel"]);
+document.addEventListener("input",e=>{
+  const p=e.target.dataset.f; if(!p) return;
+  const tgt=S.view==="perfil"?S.perfil:S.cur; if(!tgt) return;
+  setPath(tgt,p,e.target.type==="checkbox"?e.target.checked:e.target.value);
+  if(p==="normativa") S.cur.normativaManual=true;
+  save();
+  if(RERENDER.has(p)) render(true);
+});
+document.addEventListener("click",async e=>{
+  const b=e.target.closest("button"); if(!b) return; const d=b.dataset;
+  if(b.id==="topBtn"){ S.perfil=S.perfil||{}; return go(S.view==="inicio"?"perfil":"inicio"); }
+  if(d.new){ S.cur=nuevaActa(d.new); S.step=0; S.busca=""; S.view="editor"; render(); return; }
+  if(d.open){ S.cur=S.actas.find(a=>a.id===d.open); S.step=0; S.busca=""; S.view=S.cur.estado==="cerrada"?"ver":"editor"; render(); return; }
+  if(d.filtro){ S.filtro=d.filtro; render(); return; }
+  if(d.step){ S.step=Number(d.step); render(); return; }
+  if(d.rubro) return toggleRubro(d.rubro);
+  if(d.delsec){ S.cur.secuestros.splice(Number(d.delsec),1); save(); return render(true); }
+  if(d.delper){ S.cur.personas.splice(Number(d.delper),1); save(); return render(true); }
+  if(d.delfoto){ S.cur.fotos.splice(Number(d.delfoto),1); save(); return render(true); }
+  if(d.clearsig){ delete S.cur.firmas[d.clearsig]; save(); return render(true); }
+  if(d.dellogo){ delete S.perfil[d.dellogo]; save(); return render(true); }
+  switch(d.act){
+    case "perfil": S.perfil=S.perfil||{}; return go("perfil");
+    case "inicio": return go("inicio");
+    case "next": S.step=Math.min(S.step+1,pasos(S.cur).length-1); return render();
+    case "prev": S.step=Math.max(S.step-1,0); return render();
+    case "gps": return gps();
+    case "addsec": S.cur.secuestros.push({desc:"",cant:"1"}); save(); return render(true);
+    case "addper": S.cur.personas.push({docTipo:"DNI"}); save(); return render(true);
+    case "copiarDom": { const i=S.cur.infractor; i.domConstituido=[i.calle,i.localidad,i.provincia].filter(Boolean).join(", "); save(); return render(true); }
+    case "preview": S.view="ver"; return render();
+    case "volver": S.view="editor"; return render();
+    case "cerrar": return cerrar();
+    case "cerrarok": return cerrarOk();
+    case "modalno": return closeModal();
+    case "print": return openPrint();
+    case "share": return compartir();
+    case "export": return exportar();
+    case "borrar": return modal(`<h3>¿Descartar este borrador?</h3><p>Se elimina del dispositivo y no se puede recuperar.</p><div class="row"><button class="btn grow" type="button" data-act="modalno">Conservar</button><button class="btn danger grow" type="button" data-act="borrarok">Descartar</button></div>`);
+    case "borrarok": closeModal(); await store.del(S.cur.id); S.actas=S.actas.filter(a=>a!==S.cur); go("inicio"); return toast("Borrador descartado.");
+    case "borrarEjemplos": for(const a of S.actas.filter(x=>x.ejemplo)) await store.del(a.id); S.actas=S.actas.filter(a=>!a.ejemplo); await store.set("ejemplosQuitados",true); return render();
+  }
+});
+
+/* ============ Arranque ============ */
+function migrar(a){ // borradores de la versión 0.1
+  if(a.v===2) return a;
+  a.v=2; a.paraje=a.paraje||a.lugar||""; a.lugarActa=a.lugarActa||a.seccional||""; a.personas=a.personas||[];
+  a.observaciones=a.observaciones||a.manifestacion||""; a.rubros=(a.rubros||[]).filter(r=>ITEMS[r]);
+  const i=a.infractor=a.infractor||{}; i.calle=i.calle||i.domicilio||""; i.acredita=i.acredita||"documento";
+  return a;
+}
+(async function boot(){
+  S.perfil=(await store.get("perfil"))||null;
+  let L=((await store.all())||[]);
+  for(const a of L.filter(x=>x.id==="ej1"||x.id==="ej2")) await store.del(a.id);
+  L=L.filter(x=>x.id!=="ej1"&&x.id!=="ej2").map(migrar);
+  if(!L.some(a=>a.ejemplo) && !(await store.get("ejemplosQuitados"))){ const E=ejemplos(); for(const a of E) await store.put(a); L=L.concat(E); }
+  S.actas=L; render();
+  if("serviceWorker" in navigator && window.self===window.top && location.protocol!=="file:"){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
+})();
+
+/* ============ Impresión en el lugar ============ */
+const BLE_SERVICES=["000018f0-0000-1000-8000-00805f9b34fb","e7810a71-73ae-499d-8c15-faa9aef0c3f2","0000ff00-0000-1000-8000-00805f9b34fb","0000ffe0-0000-1000-8000-00805f9b34fb","0000fff0-0000-1000-8000-00805f9b34fb","0000ae30-0000-1000-8000-00805f9b34fb"];
+const PR={ancho:"58",copias:"ambas",anexo:true,fotos:false,canvas:null,ble:null,busy:false};
+const enIframe=()=>window.self!==window.top;
+function copiasDe(a){ const inf=isInfr(a); return PR.copias==="original"?["ORIGINAL"]:PR.copias==="copia"?[inf?"COPIA PARA EL INFRACTOR":"COPIA"]:["ORIGINAL",inf?"COPIA PARA EL INFRACTOR":"COPIA"]; }
+
+function openPrint(){
+  const p=S.perfil||{}; PR.ancho=p.impAncho||"58"; PR.canvas=null; PR.busy=false;
+  renderPrint();
+}
+function renderPrint(){
+  const a=S.cur, inf=isInfr(a), term=PR.ancho!=="A4";
+  const bt=!!navigator.bluetooth, shareImg=!!(navigator.canShare&&window.File);
+  modal(`<div class="prhead"><h3>Imprimir acta N° ${esc(a.numero)}</h3><button class="btn sm ghost" type="button" data-act="modalno">Cerrar</button></div>
+   <div class="field"><span class="lbl">Impresora</span><div class="seg seg3" role="radiogroup">
+    ${[["58","Térmica 58 mm"],["80","Térmica 80 mm"],["A4","Hoja A4 / carta"]].map(([v,t])=>`<label><input type="radio" name="prAncho" value="${v}" ${PR.ancho===v?"checked":""}><span>${t}</span></label>`).join("")}</div></div>
+   <div class="grid2"><div class="field"><label for="prCopias">Ejemplares</label><select id="prCopias">
+     <option value="ambas" ${PR.copias==="ambas"?"selected":""}>Original + ${inf?"copia para el infractor":"copia"}</option>
+     <option value="original" ${PR.copias==="original"?"selected":""}>Solo original</option>
+     <option value="copia" ${PR.copias==="copia"?"selected":""}>Solo ${inf?"copia para el infractor":"copia"}</option></select></div>
+    <div class="field"><span class="lbl">Contenido</span><label class="check tight"><input type="checkbox" id="prAnexo" ${PR.anexo?"checked":""}><span>Anexo digital</span></label><label class="check tight"><input type="checkbox" id="prFotos" ${PR.fotos?"checked":""}><span>Fotos</span></label></div></div>
+   ${term?`<div class="prprev" id="prPrev"><span class="hint">Preparando vista del ticket…</span></div>`:`<p class="hint">Se abre el diálogo de impresión del teléfono. Elegí la impresora (Wi‑Fi, Bluetooth o USB) o «Guardar como PDF». Cada ejemplar sale en hoja aparte.</p>`}
+   <div class="prstatus" id="prStatus" role="status"></div>
+   <div class="stack tightstack">
+   ${term?`${bt?`<button class="btn primary" type="button" id="prBT">Imprimir por Bluetooth</button>`:""}
+     ${shareImg?`<button class="btn ${bt?"":"primary"}" type="button" id="prShare">Enviar a app de impresión</button>`:""}
+     ${!bt?`<p class="hint">${enIframe()?"La vista previa no puede usar Bluetooth. Instalá la app en el celular (Chrome en Android) para imprimir directo.":"Este navegador no permite Bluetooth (iPhone o navegador sin soporte). Usá «Enviar a app de impresión» con la app de tu impresora."}</p>`:`<p class="hint">Encendé la impresora y emparejala la primera vez desde la lista que aparece. Funciona con impresoras térmicas BLE (ESC/POS) en Chrome para Android.</p>`}`
+   :enIframe()?`<p class="notice">La vista previa no puede abrir el diálogo de impresión. Funciona en la app instalada.</p>`:`<button class="btn primary" type="button" id="prA4">Imprimir</button>`}
+   </div>`);
+  document.querySelectorAll('input[name=prAncho]').forEach(r=>r.onchange=()=>{PR.ancho=r.value; S.perfil=S.perfil||{}; S.perfil.impAncho=r.value; store.set("perfil",S.perfil); renderPrint();});
+  $("#prCopias").onchange=e=>{PR.copias=e.target.value; refreshPrev();};
+  $("#prAnexo").onchange=e=>{PR.anexo=e.target.checked; refreshPrev();};
+  $("#prFotos").onchange=e=>{PR.fotos=e.target.checked; refreshPrev();};
+  const bBT=$("#prBT"), bSh=$("#prShare"), bA4=$("#prA4");
+  if(bBT) bBT.onclick=printBT; if(bSh) bSh.onclick=printShare; if(bA4) bA4.onclick=printA4;
+  refreshPrev();
+}
+async function refreshPrev(){
+  if(PR.ancho==="A4") return;
+  const box=$("#prPrev"); if(!box) return;
+  try{ PR.canvas=await ticketCanvas(S.cur,Number(PR.ancho)===80?576:384); box.innerHTML=""; const img=new Image(); img.src=PR.canvas.toDataURL("image/png"); img.alt="Vista del ticket"; box.appendChild(img);
+    const mm=Math.round(PR.canvas.height/8); box.insertAdjacentHTML("beforeend",`<span class="hint">Largo aproximado: ${mm>=1000?(mm/1000).toFixed(1)+" m":Math.round(mm/10)+" cm"} de papel</span>`);
+  }catch(e){ box.innerHTML=`<span class="hint">No se pudo generar la vista: ${esc(e.message||e)}</span>`; }
+}
+function status(m,pct){ const s=$("#prStatus"); if(!s) return; s.innerHTML=m?`${esc(m)}${pct!=null?`<span class="bar"><i style="width:${pct}%"></i></span>`:""}`:""; }
+
+/* ---- A4 por diálogo del sistema ---- */
+function printA4(){
+  const a=S.cur; let pa=$("#printArea"); if(!pa){pa=document.createElement("div");pa.id="printArea";document.body.appendChild(pa)}
+  pa.innerHTML=copiasDe(a).map(c=>docHTML(a,c,{anexo:PR.anexo,fotos:PR.fotos})).join("");
+  document.body.classList.add("printing");
+  const done=()=>{document.body.classList.remove("printing"); window.removeEventListener("afterprint",done)};
+  window.addEventListener("afterprint",done);
+  setTimeout(()=>{ window.print(); setTimeout(done,1500); },150);
+}
+
+/* ---- Ticket térmico: se dibuja el mismo documento en un canvas monocromo ---- */
+function loadImg(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src})}
+function segsDe(node,bold=false,out=[]){
+  node.childNodes.forEach(n=>{
+    if(n.nodeType===3){ if(n.nodeValue) out.push({s:n.nodeValue.replace(/\s+/g," "),b:bold}); }
+    else if(n.nodeType===1){ if(n.tagName==="BR") out.push({s:"\n",b:bold}); else segsDe(n,bold||n.tagName==="B"||n.classList.contains("v"),out); }
+  }); return out;
+}
+async function bloques(a,copia){
+  const tmp=document.createElement("div"); tmp.innerHTML=docHTML(a,copia,{anexo:PR.anexo,fotos:PR.fotos});
+  const art=tmp.firstElementChild, B=[];
+  for(const el of art.children){
+    const c=el.classList;
+    if(c.contains("ejemplo")) B.push({t:"p",al:"c",segs:[{s:el.textContent,b:true}]});
+    else if(c.contains("dlogos")){ const imgs=[...el.querySelectorAll("img")]; if(imgs.length) B.push({t:"logos",srcs:imgs.map(i=>i.src)}); const ins=el.querySelector(".dinst"); if(ins&&ins.textContent.trim()) B.push({t:"p",al:"c",sz:.9,segs:segsDe(ins)}); B.push({t:"p",al:"c",b:true,sz:.85,segs:[{s:"ADMINISTRACIÓN DE PARQUES NACIONALES",b:true}],only:isInfr(a)}); }
+    else if(c.contains("dorig")){ const h=el.querySelector("h3"); el.querySelectorAll(":scope > span").forEach(s=>B.push({t:"p",al:"r",sz:.9,segs:segsDe(s)})); if(h) B.push({t:"title",s:h.textContent}); }
+    else if(el.tagName==="H3") B.push({t:"title",s:el.textContent});
+    else if(el.tagName==="P") B.push({t:"p",segs:segsDe(el),ind:c.contains("ind")});
+    else if(c.contains("firmas")){ for(const f of el.querySelectorAll(".firma")){ const im=f.querySelector("img"); const no=f.querySelector(".nofirma"); B.push({t:"sig",src:im?im.src:null,no:no&&no.textContent.trim()&&!no.classList.contains("muted")?no.textContent.trim():null,lines:[...f.querySelector(".l").children].flatMap(ch=>ch.innerHTML.split(/<br\s*\/?>/i)).map(h=>{const d=document.createElement("div");d.innerHTML=h;return d.textContent.trim()}).filter(Boolean)}); } }
+    else if(c.contains("danexo")){ B.push({t:"rule"}); for(const n of el.children){
+        if(n.tagName==="H4"||n.tagName==="H5") B.push({t:"p",al:"c",segs:[{s:n.textContent,b:true}]});
+        else if(n.tagName==="TABLE"){ const rows=[...n.rows]; if(rows[0]&&rows[0].cells[0].tagName==="TH"&&rows[0].cells.length>2){ const hd=[...rows[0].cells].map(x=>x.textContent), vl=rows[1]?[...rows[1].cells].map(x=>x.textContent):[]; hd.forEach((h,k)=>B.push({t:"p",sz:.9,segs:[{s:h+": ",b:true},{s:vl[k]||"-",b:false}]})); }
+          else rows.forEach(r=>B.push({t:"p",sz:.9,segs:[{s:r.cells[0].textContent+": ",b:true},{s:r.cells[1]?.textContent||"",b:false}]})); }
+        else if(n.classList.contains("dphotos")){ for(const fg of n.querySelectorAll("figure")) B.push({t:"photo",src:fg.querySelector("img").src,cap:fg.querySelector("figcaption").textContent}); }
+        else if(n.tagName==="P"&&!n.classList.contains("hint2")) B.push({t:"p",sz:.9,segs:segsDe(n)});
+      } }
+    else if(c.contains("integridad")) { B.push({t:"rule"}); B.push({t:"p",sz:.75,segs:[{s:el.textContent,b:false}]}); }
+  }
+  return B.filter(b=>b.only!==false);
+}
+async function ticketCanvas(a,W){
+  const base=W>400?24:19, M=6, LH=1.32, cw=W-2*M;
+  const cps=copiasDe(a); const all=[];
+  for(let k=0;k<cps.length;k++){ all.push(...await bloques(a,cps[k])); if(k<cps.length-1) all.push({t:"cut"}); }
+  const imgs=new Map(); for(const b of all){ for(const s of [b.src,...(b.srcs||[])]) if(s&&!imgs.has(s)) imgs.set(s,await loadImg(s)); }
+  const cv=document.createElement("canvas"); const x=cv.getContext("2d");
+  const font=(sz,b)=>`${b?"700":"400"} ${Math.round(base*(sz||1))}px Arial, Helvetica, sans-serif`;
+  function wrap(segs,sz,firstInd){ const words=[]; segs.forEach(sg=>sg.s.split(/(\s+|\n)/).forEach(w=>{ if(w==="") return; words.push({w,b:sg.b}); }));
+    const lines=[]; let line=[], lw=firstInd||0;
+    for(const t of words){ if(t.w==="\n"){ lines.push(line); line=[]; lw=0; continue; } x.font=font(sz,t.b); const isSp=/^\s+$/.test(t.w); const ww=x.measureText(isSp?" ":t.w).width;
+      if(!isSp&&lw+ww>cw&&line.length){ while(line.length&&/^\s+$/.test(line.at(-1).w)) line.pop(); lines.push(line); line=[]; lw=0; }
+      if(isSp&&!line.length) continue;
+      if(!isSp&&ww>cw){ let chunk=""; for(const ch of t.w){ if(x.measureText(chunk+ch).width+lw>cw){ line.push({w:chunk,b:t.b,ww:x.measureText(chunk).width}); lines.push(line); line=[]; lw=0; chunk=""; } chunk+=ch; } x.font=font(sz,t.b); line.push({w:chunk,b:t.b,ww:x.measureText(chunk).width}); lw+=x.measureText(chunk).width; continue; }
+      line.push({w:isSp?" ":t.w,b:t.b,ww}); lw+=ww; }
+    if(line.length) lines.push(line); return lines; }
+  // pasada 1: medir; pasada 2: dibujar
+  function run(draw){
+    let y=M+4;
+    for(const b of all){
+      if(b.t==="title"){ const sz=W>400?1.35:1.3; x.font=font(sz,true); const ls=wrap([{s:b.s,b:true}],sz); for(const l of ls){ const lw=l.reduce((s,t)=>s+t.ww,0); y+=base*sz*LH; if(draw){x.font=font(sz,true); let xx=M+(cw-lw)/2; l.forEach(t=>{x.fillText(t.w,xx,y-base*sz*.3); xx+=t.ww;});} } y+=6; }
+      else if(b.t==="p"){ const sz=b.sz||1; const ind=b.ind?base*1.6:0; const ls=wrap(b.segs,sz,ind); ls.forEach((l,li)=>{ y+=base*sz*LH; if(!draw) return; const lw=l.reduce((s,t)=>s+t.ww,0); let xx=b.al==="c"?M+(cw-lw)/2:b.al==="r"?W-M-lw:M+(li===0?ind:0); for(const t of l){ x.font=font(sz,t.b); x.fillText(t.w,xx,y-base*sz*.3); if(t.b&&b.al!=="c"&&b.al!=="r"&&t.w.trim()){ x.fillRect(xx,y-base*sz*.12,t.ww,1);} xx+=t.ww; } }); y+=base*.45; }
+      else if(b.t==="logos"){ const h=W>400?110:84; const n=b.srcs.length; const slot=cw/n; b.srcs.forEach((s,k)=>{ const im=imgs.get(s); if(!im||!draw) return; const sc=Math.min(h/im.height,(slot-8)/im.width); const w=im.width*sc,hh=im.height*sc; x.drawImage(im,M+slot*k+(slot-w)/2,y+(h-hh)/2,w,hh); }); y+=h+8; }
+      else if(b.t==="sig"){ const h=W>400?110:90; y+=8; const im=b.src&&imgs.get(b.src);
+        if(draw){ if(im){ const sc=Math.min(h/im.height,cw*.8/im.width); x.drawImage(im,M+(cw-im.width*sc)/2,y,im.width*sc,im.height*sc);} else if(b.no){ x.font=font(.9,true); const tw=x.measureText(b.no).width; x.fillText(b.no,M+(cw-tw)/2,y+h/2);} x.fillRect(M+cw*.08,y+h+2,cw*.84,2);} y+=h+6;
+        for(const ln of b.lines){ const sz=.85; const ls=wrap([{s:ln,b:/^(INFRACTOR|TESTIGO|FUNCIONARIO)/.test(ln)}],sz); for(const l of ls){ y+=base*sz*LH; if(draw){ const lw=l.reduce((s,t)=>s+t.ww,0); let xx=M+(cw-lw)/2; l.forEach(t=>{x.font=font(sz,t.b); x.fillText(t.w,xx,y-base*sz*.3); xx+=t.ww;}); } } } y+=6; }
+      else if(b.t==="photo"){ const im=imgs.get(b.src); if(im){ const sc=cw/im.width; const h=Math.min(im.height*sc,cw); if(draw) x.drawImage(im,M,y+4,cw,h); y+=h+8; } const ls=wrap([{s:b.cap,b:false}],.8); ls.forEach(l=>{ y+=base*.8*LH; if(draw){ let xx=M; l.forEach(t=>{x.font=font(.8,false); x.fillText(t.w,xx,y-base*.25); xx+=t.ww;}); } }); y+=6; }
+      else if(b.t==="rule"){ y+=8; if(draw) x.fillRect(M,y,cw,2); y+=8; }
+      else if(b.t==="cut"){ y+=26; if(draw){ x.font=font(.8,false); const s="- - - - - - cortar aquí - - - - - -"; const tw=x.measureText(s).width; x.fillText(s,M+(cw-tw)/2,y);} y+=40; }
+    }
+    return y+M+24;
+  }
+  cv.width=W; cv.height=10; const H=Math.ceil(run(false)); cv.height=H;
+  x.fillStyle="#fff"; x.fillRect(0,0,W,H); x.fillStyle="#000"; x.textBaseline="alphabetic"; run(true);
+  // monocromo: umbral para texto y firmas, tramado para fotos y logos
+  const d=x.getImageData(0,0,W,H), p=d.data, L=new Float32Array(W*H);
+  for(let i=0;i<W*H;i++) L[i]=.299*p[i*4]+.587*p[i*4+1]+.114*p[i*4+2];
+  for(let yy=0;yy<H;yy++) for(let xx=0;xx<W;xx++){ const i=yy*W+xx, o=L[i], n=o<150?0:255, e=o-n; L[i]=n;
+    if(o>40&&o<215){ if(xx+1<W) L[i+1]+=e*7/16; if(yy+1<H){ if(xx>0) L[i+W-1]+=e*3/16; L[i+W]+=e*5/16; if(xx+1<W) L[i+W+1]+=e/16; } } }
+  for(let i=0;i<W*H;i++){ const v=L[i]<128?0:255; p[i*4]=p[i*4+1]=p[i*4+2]=v; p[i*4+3]=255; }
+  x.putImageData(d,0,0); return cv;
+}
+function escpos(cv){
+  const W=cv.width, H=cv.height, bw=W/8, px=cv.getContext("2d").getImageData(0,0,W,H).data;
+  const parts=[new Uint8Array([0x1B,0x40])];
+  for(let y0=0;y0<H;y0+=200){ const h=Math.min(200,H-y0); const band=new Uint8Array(8+bw*h); band.set([0x1D,0x76,0x30,0x00,bw&255,bw>>8,h&255,h>>8]);
+    for(let yy=0;yy<h;yy++) for(let xb=0;xb<bw;xb++){ let byte=0; for(let bit=0;bit<8;bit++){ const i=((y0+yy)*W+xb*8+bit)*4; if(px[i]<128) byte|=0x80>>bit; } band[8+yy*bw+xb]=byte; }
+    parts.push(band); }
+  parts.push(new Uint8Array([0x1B,0x64,0x05,0x1D,0x56,0x42,0x00]));
+  const len=parts.reduce((s,a)=>s+a.length,0), out=new Uint8Array(len); let o=0; parts.forEach(a=>{out.set(a,o);o+=a.length}); return out;
+}
+async function bleChar(){
+  if(PR.ble&&PR.ble.dev.gatt.connected) return PR.ble.ch;
+  let dev=PR.ble&&PR.ble.dev;
+  if(!dev) dev=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:BLE_SERVICES});
+  status("Conectando con "+(dev.name||"la impresora")+"…");
+  const srv=await dev.gatt.connect(); let ch=null;
+  for(const s of await srv.getPrimaryServices()){ for(const c of await s.getCharacteristics()){ if(c.properties.writeWithoutResponse||c.properties.write){ ch=c; break; } } if(ch) break; }
+  if(!ch) throw new Error("La impresora no ofrece un canal de escritura compatible.");
+  PR.ble={dev,ch}; return ch;
+}
+async function printBT(){
+  if(PR.busy) return; PR.busy=true;
+  try{
+    if(!PR.canvas) await refreshPrev();
+    const ch=await bleChar(); const data=escpos(PR.canvas);
+    const nr=ch.properties.writeWithoutResponse, CH=nr?180:100;
+    for(let o=0;o<data.length;o+=CH){
+      const part=data.slice(o,o+CH);
+      if(nr&&ch.writeValueWithoutResponse){ await ch.writeValueWithoutResponse(part); await new Promise(r=>setTimeout(r,10)); } else await ch.writeValue(part);
+      if((o/CH)%20===0) status("Imprimiendo…",Math.round(o/data.length*100));
+    }
+    status("Listo. Cortá el papel por la línea si salieron dos ejemplares.",100); toast("Acta enviada a la impresora.");
+  }catch(e){
+    const m=e&&e.name==="NotFoundError"?"No se eligió ninguna impresora.":e&&e.name==="SecurityError"?"El navegador bloqueó el Bluetooth en esta pantalla.":"No se pudo imprimir: "+(e.message||e)+". Revisá que la impresora esté encendida y cerca.";
+    status(m); if(PR.ble&&PR.ble.dev&&!PR.ble.dev.gatt.connected) PR.ble=null;
+  } finally { PR.busy=false; }
+}
+async function printShare(){
+  try{ if(!PR.canvas) await refreshPrev();
+    const blob=await new Promise(r=>PR.canvas.toBlob(r,"image/png")); const f=new File([blob],`acta-${S.cur.numero}.png`,{type:"image/png"});
+    if(navigator.canShare&&navigator.canShare({files:[f]})){ await navigator.share({files:[f],title:"Acta N° "+S.cur.numero}); status("Elegí la app de tu impresora (por ejemplo RawBT o la del fabricante)."); }
+    else status("Este navegador no puede compartir la imagen. Instalá la app en el celular.");
+  }catch(e){ if(e&&e.name!=="AbortError") status("No se pudo compartir la imagen."); }
+}
+</script>
+</body>
+</html>

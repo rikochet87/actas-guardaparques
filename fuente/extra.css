@@ -1,0 +1,52 @@
+.mono{font-family:var(--f-mono);font-size:.9em}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media (max-width:480px){.seg{grid-template-columns:1fr}}
+.seg label{display:flex;gap:10px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);cursor:pointer;font-size:.92rem}
+.seg input{width:20px;height:20px;margin:0;accent-color:var(--accent);flex:none}
+.seg label:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface));font-weight:600}
+.logoprev{height:96px;border:1px dashed var(--line);border-radius:8px;display:grid;place-items:center;background:#FFFFFF;overflow:hidden}
+.logoprev img{max-height:86px;max-width:90%;object-fit:contain}
+.logoprev .hint{color:#6B746E}
+/* Catálogo de infracciones */
+.selitems{display:flex;flex-direction:column;gap:6px}
+.selitem{display:block;text-align:left;border:1px solid var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface));border-radius:8px;padding:10px 12px;font-size:.9rem;cursor:pointer;line-height:1.35}
+.selitem b{font-family:var(--f-mono);font-weight:500;font-size:.82rem;margin-right:6px;color:var(--accent)}
+.selitem span{float:right;font-size:1.1rem;line-height:1;margin-left:8px;color:var(--muted)}
+.cat{display:flex;flex-direction:column;gap:6px;max-height:420px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;padding:6px;background:var(--bg)}
+.cat details{border-radius:6px;background:var(--surface);border:1px solid var(--line)}
+.cat summary{display:flex;gap:10px;align-items:center;padding:10px 12px;cursor:pointer;list-style:none;font-size:.88rem;line-height:1.3}
+.cat summary::-webkit-details-marker{display:none}
+.cat summary::before{content:"";flex:none;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(-45deg);transition:transform .15s}
+.cat details[open] summary::before{transform:rotate(45deg)}
+.cat summary .grow{flex:1;min-width:0}
+.cat summary .res{display:block;font-family:var(--f-mono);font-size:.76rem;color:var(--muted);margin-top:2px}
+.catitems{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.catitem{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;text-align:left;background:transparent;border:0;border-bottom:1px solid var(--line);padding:10px 12px;font-size:.9rem;cursor:pointer;line-height:1.35;min-height:44px}
+.catitem:last-child{border-bottom:0}
+.catitem .art{font-family:var(--f-mono);font-size:.76rem;color:var(--muted);white-space:nowrap;padding-top:2px}
+.catitem[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 14%,var(--surface));font-weight:600}
+.catitem[aria-pressed="true"] .art{color:var(--accent)}
+/* Documento según modelo oficial */
+.doc .dlogos{display:grid;grid-template-columns:92px 1fr 92px;align-items:center;gap:10px;margin-bottom:10px}
+.doc .dlogos img{width:92px;height:92px;object-fit:contain}
+.doc .logoph{width:84px;height:84px;border:1px dashed #AAA;border-radius:50%;display:grid;place-items:center;text-align:center;font-size:.62rem;color:#888;padding:6px;line-height:1.2}
+.doc .dinst{text-align:center;font-family:Georgia,"Times New Roman",serif;font-size:.85rem;line-height:1.4;color:#222}
+.doc .dorig{display:flex;flex-direction:column;align-items:flex-end;font-size:.8rem;color:#333;gap:2px}
+.doc .dorig span:first-child{font-weight:600;letter-spacing:.04em}
+.doc .dconst{flex-direction:row;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin:6px 0 12px}
+.doc .dconst .dtitle{margin:0;flex:1;text-align:center}
+.doc h3.dtitle.u{text-decoration:underline;text-underline-offset:4px}
+.doc .v{border-bottom:1px dotted #555;padding:0 2px;font-weight:600;color:#0B2A55;font-family:var(--f-body)}
+.doc p.ind{text-indent:2.2em}
+.doc .firmas.f3{grid-template-columns:repeat(3,1fr)}
+.doc .firmas.f2{grid-template-columns:1fr 1fr}
+@media (max-width:480px){.doc .firmas.f3{grid-template-columns:1fr 1fr}}
+.doc .firma .l{display:flex;flex-direction:column;gap:2px}
+.doc .firma .l b{font-weight:600;letter-spacing:.03em}
+.doc .firma .acl{font-size:.74rem;color:#444;min-height:1em}
+.doc .firma .nofirma.muted{color:#777}
+.doc .danexo{margin-top:26px;padding-top:12px;border-top:2px solid #111}
+.doc .danexo h4{font-family:var(--f-display);font-size:.95rem;letter-spacing:.05em;text-transform:uppercase;margin:0 0 2px}
+.doc .danexo h5{font-size:.85rem;margin:12px 0 4px}
+.doc .danexo .hint2{font-size:.78rem;color:#555;margin-bottom:8px}
+.doc .danexo th{width:34%;background:#F2F2F2;font-weight:600}
