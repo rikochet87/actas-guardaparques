@@ -90,11 +90,11 @@ async function instalar(){
 
 /* ============ Render principal ============ */
 function render(keep){
-  const y=window.scrollY; const v=$("#view");
+  const y=window.scrollY; const v=$("#view"); mapaDestroy();
   if(S.view==="inicio") v.innerHTML=vInicio(), bar(null);
   else if(S.view==="perfil") v.innerHTML=vPerfil(), bar("perfil"), afterPerfil();
   else if(S.view==="editor") v.innerHTML=vEditor(), bar("editor"), afterEditor();
-  else if(S.view==="ver") v.innerHTML=vVer(), bar("ver");
+  else if(S.view==="ver") v.innerHTML=vVer(), bar("ver"), mapaInit("mapaVer",S.cur,false);
   $("#topBtn").textContent=S.view==="inicio"?"Mis datos":"Inicio";
   const sub=S.cur?(isInfr(S.cur)?"Acta de infracción":"Acta de constatación"):"Administración de Parques Nacionales";
   $("#topTitle").firstChild.nodeValue=S.view==="editor"||S.view==="ver"?(S.cur.numero?"Acta N° "+S.cur.numero:"Borrador"):S.view==="perfil"?"Mis datos":"Actas Guardaparques";
@@ -171,6 +171,8 @@ function sLugar(a){
   ${inf?fld("lugarActa","Lugar de confección del acta",{req:true,ph:"Ej.: Seccional Yacaré"}):""}
   ${fld("paraje",inf?"Paraje conocido como":"Lugar donde se constituye",{req:true,type:"textarea",ph:"Ej.: Picada al Carpincho, km 2, a 300 m del puesto de control"})}
   <div class="field"><span class="lbl req">Ubicación GPS</span><div class="gps ${coordsOk(a)?"ok":""}" id="gpsBox">${coordsHTML(a)}<button class="btn sm" type="button" data-act="gps">${coordsOk(a)?"Volver a tomar":"Tomar ubicación"}</button></div></div>
+  <div class="mapa" id="mapaEdit" role="region" aria-label="Mapa de la ubicación del acta"></div>
+  <p class="hint">Si el punto no coincide, arrastrá el marcador o tocá el mapa en el lugar correcto.</p>
   <div class="grid2">${fld("lat","Latitud",{im:"decimal",ph:"-27.06000"})}${fld("lon","Longitud",{im:"decimal",ph:"-60.52000"})}</div>
   <p class="hint">Se toma sola al abrir el acta y es obligatoria para cerrarla. Sin GPS, escribí las coordenadas a mano. En el acta impresa van al pie, con un código QR que abre el lugar en el mapa.</p>
   <div class="grid2">${fld("fecha","Fecha",{type:"date",req:true})}${fld("hora","Hora",{type:"time",req:true})}</div></section>`;
@@ -179,7 +181,7 @@ function coordsHTML(a){
   if(S.gpsBusy===a.id) return `<span class="coords" id="coords"><span class="pulse"></span>Buscando señal GPS…${a.prec?` <span class="hint">mejor lectura ± ${esc(a.prec)} m</span>`:""}</span>`;
   if(!coordsOk(a)) return `<span class="coords" id="coords">Sin coordenadas</span>`;
   const p=Number(a.prec); const flojo=p>50;
-  return `<span class="coords" id="coords">${esc(a.lat)}, ${esc(a.lon)}${a.prec?` <span class="hint ${flojo?"warn":""}">± ${esc(a.prec)} m${flojo?" · precisión baja, conviene volver a tomarla a cielo abierto":""}</span>`:` <span class="hint">cargada a mano</span>`}</span>`;
+  return `<span class="coords" id="coords">${esc(a.lat)}, ${esc(a.lon)}${a.prec?` <span class="hint ${flojo?"warn":""}">± ${esc(a.prec)} m${flojo?" · precisión baja, conviene volver a tomarla a cielo abierto":""}</span>`:` <span class="hint">${a.ajusteMapa?"ubicada en el mapa":"cargada a mano"}</span>`}</span>`;
 }
 function sInfractor(a){
   const i=a.infractor;
@@ -267,6 +269,7 @@ function sigBox(key,label){const v=S.cur.firmas[key];return `<div class="sig"><s
 function afterEditor(){
   document.querySelectorAll(".sigbox").forEach(initSig);
   ["camIn","galIn"].forEach(id=>{const el=document.getElementById(id); if(el) el.onchange=e=>addFotos(e.target.files);});
+  if(S.step===0) mapaInit("mapaEdit",S.cur,true);
   const b=$("#buscaInf"); if(b) b.oninput=()=>{S.busca=b.value; $("#catalogo").innerHTML=catalogo(S.cur);};
 }
 
@@ -359,6 +362,7 @@ function anexo(a,opt={fotos:true}){
   if(v.dominio||v.marca||v.tipo) rows.push(["Vehículo",[v.tipo,v.marca,v.color,v.dominio&&"dominio "+v.dominio].filter(Boolean).join(", ")]);
   if(a.rubros.length) rows.push(["Conductas (listado APN)",a.rubros.map(id=>ITEMS[id]?`${ITEMS[id].art} ${ITEMS[id].g.r}: ${ITEMS[id].t}`:"").filter(Boolean).join(" | ")]);
   if(!inf&&a.normativa) rows.push(["Normativa relacionada",a.normativa]);
+  if(a.ajusteMapa) rows.push(["Origen de la ubicación","Marcada sobre el mapa por el funcionario actuante."]);
   if(a.firmaPapel) rows.push(["Firmas","Tomadas de puño y letra sobre el acta impresa."]);
   if(inf&&a.negoFirma&&!a.firmaPapel) rows.push(["Negativa a firmar",`La persona infractora se negó a suscribir la presente${a.motivoNoFirma?`. Manifestó: «${a.motivoNoFirma}»`:""}. Corresponde sumario contravencional (art. 6°, Dto. 300/2022).`]);
   if(a.observaciones) rows.push([inf?"Manifestación / observaciones":"Observaciones",a.observaciones]);
@@ -371,7 +375,7 @@ function anexo(a,opt={fotos:true}){
 function firma(src,rol,acl,no,below){return `<div class="firma">${no?`<div class="nofirma">${no}</div>`:src?`<img src="${src}" alt="Firma">`:`<div class="nofirma muted">&nbsp;</div>`}<div class="l">${below?`<b>${rol}</b><span class="acl">${acl}</span>`:`<span class="acl">${esc(acl||"")}</span><b>${rol}</b>`}</div></div>`}
 function vVer(){
   const a=S.cur;
-  return `<div class="stack">${a.estado==="cerrada"?"":`<div class="notice noprint"><b>Vista previa.</b> El acta sigue abierta. Volvé a editar para cerrarla.</div>`}<div class="docwrap">${docHTML(a)}</div></div>`;
+  return `<div class="stack">${a.estado==="cerrada"?"":`<div class="notice noprint"><b>Vista previa.</b> El acta sigue abierta. Volvé a editar para cerrarla.</div>`}${coordsOk(a)?`<div class="mapcard noprint"><div class="mapa" id="mapaVer" role="region" aria-label="Mapa de la ubicación del acta"></div><div class="row"><span class="grow mono">${esc(num(a.lat).toFixed(5))}, ${esc(num(a.lon).toFixed(5))}${a.prec?` · ± ${esc(a.prec)} m`:""}</span><a class="btn sm" href="${esc(mapsUrl(a))}" target="_blank" rel="noopener">Abrir en Google Maps</a></div></div>`:""}<div class="docwrap">${docHTML(a)}</div></div>`;
 }
 
 /* ============ Barra de acciones ============ */
@@ -431,6 +435,7 @@ function paintCoords(a){ if(S.cur!==a||S.view!=="editor"||S.step!==0) return; co
   box.classList.toggle("ok",coordsOk(a)&&S.gpsBusy!==a.id); box.querySelector(".coords").outerHTML=coordsHTML(a);
   const b=box.querySelector("button"); if(b){b.textContent=S.gpsBusy===a.id?"Detener":coordsOk(a)?"Volver a tomar":"Tomar ubicación";}
   ["lat","lon"].forEach(k=>{const el=$("#"+k); if(el&&document.activeElement!==el) el.value=a[k]||"";});
+  mapaSync(a);
   document.querySelectorAll('.step[data-step="0"]').forEach(s=>s.classList.toggle("done",S.step!==0&&stepOk(a,0))); }
 function gpsStop(){ if(gpsWatch!=null&&navigator.geolocation) navigator.geolocation.clearWatch(gpsWatch); gpsWatch=null; clearTimeout(gpsT); }
 function gps(auto){
@@ -441,7 +446,7 @@ function gps(auto){
   const fin=(msg)=>{ gpsStop(); if(S.gpsBusy===a.id) S.gpsBusy=null; paintCoords(a); if(msg) toast(msg); };
   gpsWatch=navigator.geolocation.watchPosition(p=>{
       if(S.cur!==a) return fin();
-      if(!best||p.coords.accuracy<best.coords.accuracy){ best=p; a.lat=p.coords.latitude.toFixed(5); a.lon=p.coords.longitude.toFixed(5); a.prec=String(Math.round(p.coords.accuracy)); a.gpsHora=new Date().toISOString(); save(); paintCoords(a); }
+      if(!best||p.coords.accuracy<best.coords.accuracy){ best=p; a.lat=p.coords.latitude.toFixed(5); a.lon=p.coords.longitude.toFixed(5); a.prec=String(Math.round(p.coords.accuracy)); a.ajusteMapa=false; a.gpsHora=new Date().toISOString(); save(); paintCoords(a); }
       if(p.coords.accuracy<=15) fin("Ubicación tomada (± "+a.prec+" m).");
     },e=>{ if(best) return fin("Ubicación tomada (± "+a.prec+" m)."); fin(e.code===1?"Permiso de ubicación denegado. Habilitalo en el teléfono o cargá las coordenadas a mano.":"No se obtuvo señal GPS. Probá a cielo abierto o cargalas a mano."); },
     {enableHighAccuracy:true,maximumAge:0,timeout:30000});
@@ -460,7 +465,7 @@ document.addEventListener("input",e=>{
   const tgt=S.view==="perfil"?S.perfil:S.cur; if(!tgt) return;
   setPath(tgt,p,e.target.type==="checkbox"?e.target.checked:e.target.value);
   if(p==="normativa") S.cur.normativaManual=true;
-  if(p==="lat"||p==="lon"){ S.cur.prec=""; if(S.gpsBusy===S.cur.id){gpsStop();S.gpsBusy=null;} paintCoords(S.cur); }
+  if(p==="lat"||p==="lon"){ S.cur.prec=""; S.cur.ajusteMapa=false; if(S.gpsBusy===S.cur.id){gpsStop();S.gpsBusy=null;} paintCoords(S.cur); }
   save();
   if(RERENDER.has(p)) render(true);
 });
