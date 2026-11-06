@@ -92,6 +92,6 @@ To run it on a computer: `python3 -m http.server 8000` in this folder and open h
 
 <div align="center">
 
-**Matías Rosello** · [GitHub](https://github.com/rikochet87) · rosellomatias87@gmail.com
+**Matías Roselló** · [GitHub](https://github.com/rikochet87) · rosellomatias87@gmail.com
 
 </div>
